@@ -1,0 +1,128 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:get_it/get_it.dart';
+import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
+import 'package:invoice_billing_app/core/data/app_user_remote_datasource.dart';
+import 'package:invoice_billing_app/core/data/auth_remote_datasources.dart';
+import 'package:invoice_billing_app/core/data/invoice_remote_datasource.dart';
+import 'package:invoice_billing_app/core/secrets/secrets.dart';
+import 'package:invoice_billing_app/core/utils/firebase_options.dart';
+import 'package:invoice_billing_app/features/auth/domain/auth_repository.dart';
+import 'package:invoice_billing_app/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:invoice_billing_app/features/dashboard/domain/repository/dashboard_repository.dart';
+import 'package:invoice_billing_app/features/dashboard/presentation/bloc/dashboard_bloc/dashboard_bloc.dart';
+import 'package:invoice_billing_app/features/invoice/domain/repository/invoice_repository.dart';
+import 'package:invoice_billing_app/features/invoice/presentation/bloc/create_invoice_bloc.dart';
+import 'package:invoice_billing_app/features/invoice_edit/domain/repository/edit_invoice_repository.dart';
+import 'package:invoice_billing_app/features/invoice_edit/presentation/bloc/edit_invoice_bloc.dart';
+import 'package:invoice_billing_app/features/settings/domain/repository/settings_repository.dart';
+import 'package:invoice_billing_app/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongodart;
+
+final serviceLocator = GetIt.instance;
+
+Future<bool> initDependencies() async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    final mongodart.Db mongoDb = await mongodart.Db.create(
+      Secrets.mongoDbLink,
+    );
+    await mongoDb.open(secure: true);
+
+    // Core
+    serviceLocator.registerLazySingleton(
+      () => mongoDb,
+    );
+    serviceLocator.registerLazySingleton(
+      () => FirebaseAuth.instance,
+    );
+    serviceLocator.registerLazySingleton(
+      () => FirebaseFirestore.instance,
+    );
+    serviceLocator.registerLazySingleton(
+      () => AppUserRemoteDatasource(firebaseFirestore: serviceLocator()),
+    );
+    serviceLocator.registerLazySingleton<InvoiceRemoteDatasource>(
+      () => InvoiceRemoteDatasource(
+        mongoDb: serviceLocator(),
+      ),
+    );
+    serviceLocator.registerLazySingleton<AuthRemoteDatasources>(
+      () => AuthRemoteDatasources(
+        firebaseAuth: serviceLocator(),
+        firebaseFirestore: serviceLocator(),
+      ),
+    );
+    serviceLocator.registerLazySingleton(
+      () => AppUserCubit(
+          appUserRemoteDatasource: serviceLocator(),
+          firebaseAuth: serviceLocator()),
+    );
+    _initAuth();
+    _initCreateInvoice();
+    _initDashboard();
+    _initEditInvoice();
+    _initSettings();
+  } catch (e) {
+    return false;
+  }
+
+  return true;
+}
+
+void _initAuth() {
+  serviceLocator.registerFactory<AuthRepository>(
+    () => AuthRepository(authRemoteDatasources: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => AuthBloc(authRepository: serviceLocator()),
+  );
+}
+
+void _initCreateInvoice() {
+  serviceLocator.registerFactory<CreateInvoiceRepository>(
+    () => CreateInvoiceRepository(invoiceRemoteDatasource: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => CreateInvoiceBloc(
+      appUserCubit: serviceLocator(),
+      createInvoiceRepository: serviceLocator(),
+    ),
+  );
+}
+
+void _initDashboard() {
+  serviceLocator.registerFactory<DashboardRepository>(
+    () => DashboardRepository(invoiceRemoteDatasource: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => DashboardBloc(dashboardRepository: serviceLocator()),
+  );
+}
+
+void _initEditInvoice() {
+  serviceLocator.registerFactory<EditInvoiceRepository>(
+    () => EditInvoiceRepository(invoiceRemoteDatasource: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => EditInvoiceBloc(editInvoiceRepository: serviceLocator()),
+  );
+}
+
+void _initSettings() {
+  serviceLocator.registerFactory<SettingsRepository>(
+    () => SettingsRepository(authRemoteDatasources: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => SettingsBloc(settingsRepository: serviceLocator()),
+  );
+}
