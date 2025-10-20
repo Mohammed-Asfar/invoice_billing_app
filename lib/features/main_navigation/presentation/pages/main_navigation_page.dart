@@ -8,8 +8,9 @@ import 'package:invoice_billing_app/core/utils/show_app_dialog.dart';
 import 'package:invoice_billing_app/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:invoice_billing_app/features/invoice/presentation/pages/invoice_page.dart';
 import 'package:invoice_billing_app/features/main_navigation/presentation/widgets/navigator_list_tile.dart';
+import 'package:invoice_billing_app/features/quotation/presentation/pages/quotation_page.dart';
 import 'package:invoice_billing_app/features/settings/presentation/pages/settings_page.dart';
-import 'package:invoice_billing_app/features/templates/presentation/pages/templates_page.dart';
+// import 'package:invoice_billing_app/features/templates/presentation/pages/templates_page.dart';
 
 class MainNavigationPage extends StatefulWidget {
   static route() => {
@@ -27,7 +28,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
   List<Widget> pages = [
     DashboardPage(),
     InvoicePage(),
-    TemplatesPage(),
+    QuotationPage(),
+    // TemplatesPage(),
     SettingsPage(),
   ];
   int selectedPage = 0;
@@ -135,6 +137,18 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                         icon: Icons.request_quote,
                         title: "Invoice",
                       ),
+                      NavigatorListTile(
+                        isAnimationOver: isAnimationOver,
+                        ishidden: ishidden,
+                        isSelected: selectedPage == 2,
+                        onTap: () {
+                          setState(() {
+                            selectedPage = 2;
+                          });
+                        },
+                        icon: Icons.description_rounded,
+                        title: "Quotation",
+                      ),
                       SizedBox(
                         height: 10,
                       ),
@@ -159,10 +173,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                       // NavigatorListTile(
                       //   isAnimationOver: isAnimationOver,
                       //   ishidden: ishidden,
-                      //   isSelected: selectedPage == 2,
+                      //   isSelected: selectedPage == 3,
                       //   onTap: () {
                       //     setState(() {
-                      //       selectedPage = 2;
+                      //       selectedPage = 3;
                       //     });
                       //   },
                       //   icon: Icons.layers,

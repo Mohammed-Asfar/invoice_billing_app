@@ -1,7 +1,58 @@
-part of 'invoice_templates.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:invoice_billing_app/core/entities/quotation.dart';
+import 'package:invoice_billing_app/core/entities/user.dart';
+import 'package:invoice_billing_app/core/utils/date_format.dart';
 
-Future<Uint8List> generatefinalClassicInvoicePDF(
-    {required User user, required Invoice invoice}) async {
+// Helper function for Table Cells
+pw.Widget _tableCell(String text,
+    {bool isHeader = false,
+    bool isAmountField = false,
+    bool isDetails = false}) {
+  return pw.Padding(
+    padding: pw.EdgeInsets.all(4),
+    child: pw.Text(text,
+        textAlign: isDetails
+            ? pw.TextAlign.left
+            : isAmountField
+                ? pw.TextAlign.right
+                : pw.TextAlign.center,
+        style: pw.TextStyle(
+            fontSize: 8,
+            fontWeight: isHeader ? pw.FontWeight.bold : pw.FontWeight.normal)),
+  );
+}
+
+// Helper function for Total Rows
+pw.Widget _totalRow(String title, double value,
+    {bool isBold = false, bool isNegative = false}) {
+  return pw.Row(
+    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    children: [
+      pw.Text(title,
+          style: pw.TextStyle(
+              fontSize: 8,
+              fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+      pw.Text(
+          isNegative
+              ? "- ₹ ${value.abs().toStringAsFixed(2)}"
+              : "₹ ${value.toStringAsFixed(2)}",
+          style: pw.TextStyle(
+              fontSize: 8,
+              fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal)),
+    ],
+  );
+}
+
+Future<Uint8List> fetchNetworkImage(String url) async {
+  final response = await http.get(Uri.parse(url));
+  return response.bodyBytes;
+}
+
+Future<Uint8List> generateQuotationPDF(
+    {required User user, required Quotation quotation}) async {
   // Load fonts
   final fontRegular =
       pw.Font.ttf(await rootBundle.load("assets/fonts/Poppins-Regular.ttf"));
@@ -35,7 +86,7 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
                 pw.Spacer(),
                 pw.SizedBox(width: 100),
                 pw.Text(
-                  "TAX INVOICE",
+                  "QUOTATION",
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
                 pw.Spacer(),
@@ -78,16 +129,24 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
             pw.SizedBox(height: 5),
             pw.Divider(),
 
-            // Invoice Details
+            // Quotation Details
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Text("Invoice No: ${invoice.invoiceNumber}",
+                pw.Text("Quotation No: ${quotation.quotationNumber}",
                     style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold, fontSize: 12)),
-                pw.Text("Date: ${dateFormat(invoice.issuedDate)}",
-                    style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text("Date: ${dateFormat(quotation.issuedDate)}",
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                    pw.Text("Valid Until: ${dateFormat(quotation.validUntilDate)}",
+                        style: pw.TextStyle(
+                            fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                  ],
+                ),
               ],
             ),
             pw.SizedBox(height: 5),
@@ -104,24 +163,23 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
                           style: pw.TextStyle(
                               fontWeight: pw.FontWeight.bold, fontSize: 12)),
                       _infoTable([
-                        ["Name:", invoice.customerName],
+                        ["Name:", quotation.customerName],
                         [
                           "Address:",
-                          invoice.customerAddress.split("\$").join("\n")
+                          quotation.customerAddress.split("\$").join("\n")
                         ],
-                        ["Mobile:", invoice.customerPhone],
+                        ["Mobile:", quotation.customerPhone],
                         [
                           "State:",
-                          "${invoice.customerStateName}, Code: ${invoice.customerCode}"
+                          "${quotation.customerStateName}, Code: ${quotation.customerCode}"
                         ],
-                        ["GSTIN:", invoice.customerGSTIN],
                       ]),
                     ],
                   ),
                 ),
                 pw.Spacer(),
                 pw.SizedBox(width: 20),
-                invoice.shippingName == ""
+                quotation.shippingName == ""
                     ? pw.Container()
                     : pw.SizedBox(
                         width: 200,
@@ -133,14 +191,14 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
                                     fontWeight: pw.FontWeight.bold,
                                     fontSize: 12)),
                             _infoTable([
-                              ["Name:", invoice.shippingName],
+                              ["Name:", quotation.shippingName],
                               [
                                 "Address:",
-                                invoice.shippingAddress.split("\$").join("\n")
+                                quotation.shippingAddress.split("\$").join("\n")
                               ],
                               [
                                 "State:",
-                                "${invoice.shippingState}, Code: ${invoice.shippingCode}"
+                                "${quotation.shippingState}, Code: ${quotation.shippingCode}"
                               ],
                             ]),
                           ],
@@ -157,11 +215,10 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
               columnWidths: {
                 0: pw.FixedColumnWidth(30),
                 1: pw.FlexColumnWidth(4),
-                2: pw.FlexColumnWidth(1),
+                2: pw.FixedColumnWidth(40),
                 3: pw.FixedColumnWidth(40),
-                4: pw.FixedColumnWidth(40),
+                4: pw.FlexColumnWidth(1),
                 5: pw.FlexColumnWidth(1),
-                6: pw.FlexColumnWidth(1),
               },
               children: [
                 // Table Header
@@ -170,15 +227,14 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
                   children: [
                     _tableCell("S.No", isHeader: true),
                     _tableCell("Description", isHeader: true),
-                    _tableCell("HSN/SAC", isHeader: true),
                     _tableCell("Qty", isHeader: true),
-                    _tableCell("Unit", isHeader: true),
                     _tableCell("Rate", isHeader: true),
+                    _tableCell("Unit", isHeader: true),
                     _tableCell("Amount", isHeader: true),
                   ],
                 ),
                 // Dynamically Populate Product Data
-                ...invoice.products.map((product) {
+                ...quotation.products.map((product) {
                   countNum += 1;
                   final double amount = product.rate * product.quantity;
 
@@ -186,10 +242,9 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
                     children: [
                       _tableCell(countNum.toString()),
                       _tableCell(product.description, isDetails: true),
-                      _tableCell(product.hsn),
                       _tableCell(product.quantity.toString()),
-                      _tableCell(product.per),
                       _tableCell(product.rate.toStringAsFixed(2)),
+                      _tableCell(product.per),
                       _tableCell(amount.toStringAsFixed(2),
                           isAmountField: true),
                     ],
@@ -199,45 +254,36 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
             ),
             pw.SizedBox(height: 5),
 
-            // Invoice Totals
-            _totalRow("Sub-Total:", invoice.subTotal),
-            invoice.customerCode == "33"
+            // Quotation Totals
+            _totalRow("Sub-Total:", quotation.subTotal),
+            quotation.customerCode == "33"
                 ? pw.Container()
                 : _totalRow(
-                    "OUTPUT IGST @ ${invoice.cgstPercent + invoice.sgstPercent}%:",
-                    invoice.cgstAmount + invoice.sgstAmount),
-            invoice.customerCode != "33"
+                    "OUTPUT IGST @ ${quotation.cgstPercent + quotation.sgstPercent}%:",
+                    quotation.cgstAmount + quotation.sgstAmount),
+            quotation.customerCode != "33"
                 ? pw.Container()
-                : _totalRow("OUTPUT CGST @ ${invoice.cgstPercent}%:",
-                    invoice.cgstAmount),
-            invoice.customerCode != "33"
+                : _totalRow("OUTPUT CGST @ ${quotation.cgstPercent}%:",
+                    quotation.cgstAmount),
+            quotation.customerCode != "33"
                 ? pw.Container()
-                : _totalRow("OUTPUT SGST @ ${invoice.sgstPercent}%:",
-                    invoice.sgstAmount),
+                : _totalRow("OUTPUT SGST @ ${quotation.sgstPercent}%:",
+                    quotation.sgstAmount),
 
-            _totalRow("Round Off: ", invoice.roundOff, isNegative: true),
+            _totalRow("Round Off: ", quotation.roundOff, isNegative: true),
             pw.Text(
-                "Total GST Amount(${invoice.cgstPercent+ invoice.sgstPercent}%):  ₹ ${invoice.cgstAmount + invoice.sgstAmount}",
+                "Total GST Amount(${quotation.cgstPercent + quotation.sgstPercent}%):  ₹ ${quotation.cgstAmount + quotation.sgstAmount}",
                 style: pw.TextStyle(fontSize: 8)),
 
             pw.Divider(),
 
-            _totalRow("Total:", invoice.grandTotal, isBold: true),
-            pw.Text("Total in Words: ${invoice.grandTotalInWords}",
+            _totalRow("Total:", quotation.grandTotal, isBold: true),
+            pw.Text("Total in Words: ${quotation.grandTotalInWords}",
                 style: pw.TextStyle(fontSize: 8)),
 
-            pw.SizedBox(height: 8),
-            pw.Text("Company Bank Details:",
-                style:
-                    pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 10)),
-            pw.Text("Name: M/S TBS ENTERPRISES",
-                style: pw.TextStyle(fontSize: 8)),
-            pw.Text("A/c No: ${user.companyAccountNumber}",
-                style: pw.TextStyle(fontSize: 8)),
-            pw.Text("IFSC: ${user.accountIFSC}",
-                style: pw.TextStyle(fontSize: 8)),
-            pw.Text("Bank: ${user.bankName}, Branch: ${user.bankBranch}",
-                style: pw.TextStyle(fontSize: 8)),
+            pw.SizedBox(height: 20),
+            pw.Text("This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
+                style: pw.TextStyle(fontSize: 10)),
             pw.SizedBox(height: 10),
 
             pw.Spacer(),

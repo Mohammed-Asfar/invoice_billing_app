@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/data/app_user_remote_datasource.dart';
 import 'package:invoice_billing_app/core/entities/invoice_controller.dart';
+import 'package:invoice_billing_app/core/entities/quotation_controller.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/models/user_model.dart';
 
@@ -13,6 +14,7 @@ class AppUserCubit extends Cubit<AppUserState> {
   final AppUserRemoteDatasource _appUserRemoteDatasource;
   late User user;
   InvoiceController? invoiceController;
+  QuotationController? quotationController;
   late final Stream<fauth.User?> loginStream;
   final TextEditingController searchBarController = TextEditingController();
   AppUserCubit(
