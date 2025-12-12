@@ -22,6 +22,7 @@ class Quotation {
   final double roundOff;
   final double grandTotal;
   final String grandTotalInWords;
+  final String termsAndConditions;
 
   Quotation({
     required this.quotationNumber,
@@ -45,6 +46,7 @@ class Quotation {
     required this.roundOff,
     required this.grandTotal,
     required this.grandTotalInWords,
+    required this.termsAndConditions,
   });
 }
 

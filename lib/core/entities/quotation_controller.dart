@@ -35,6 +35,7 @@ class QuotationController {
   TextEditingController roundoffController = TextEditingController();
   TextEditingController grandTotalController = TextEditingController();
   TextEditingController grandTotalInWordsController = TextEditingController();
+  TextEditingController termsAndConditionsController = TextEditingController();
 
   DateTime issuedDateController = DateTime.now();
   DateTime validUntilDateController = DateTime.now().add(Duration(days: 30));
@@ -157,6 +158,7 @@ class QuotationController {
       roundOff: double.tryParse(roundOffController.text) ?? 0.0,
       grandTotal: double.tryParse(grandTotalController.text) ?? 0.0,
       grandTotalInWords: grandTotalInWordsController.text.trim(),
+      termsAndConditions: termsAndConditionsController.text.trim(),
     );
   }
 }

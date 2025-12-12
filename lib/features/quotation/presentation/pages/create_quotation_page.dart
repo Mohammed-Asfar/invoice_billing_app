@@ -107,11 +107,13 @@ class _CreateQuotationPageState extends State<CreateQuotationPage> {
                       lastDate: DateTime.now().add(Duration(days: 365)),
                     );
                     setState(() {
-                      _quotationController!.validUntilDateController = datePicker ??
-                          _quotationController!.validUntilDateController;
+                      _quotationController!.validUntilDateController =
+                          datePicker ??
+                              _quotationController!.validUntilDateController;
                     });
                   },
-                  date: dateFormat(_quotationController!.validUntilDateController),
+                  date: dateFormat(
+                      _quotationController!.validUntilDateController),
                   hintText: "Valid until",
                 ),
               ),
@@ -431,7 +433,13 @@ class _CreateQuotationPageState extends State<CreateQuotationPage> {
           BasicTextField(
             controller: _quotationController!.grandTotalInWordsController,
             hintText: "Grand Total in Words",
-          )
+          ),
+          const SizedBox(height: 10),
+          BasicTextField(
+            controller: _quotationController!.termsAndConditionsController,
+            hintText: "Terms and Conditions",
+            maxLines: 4,
+          ),
         ],
       ),
     );
@@ -477,7 +485,8 @@ class _CreateQuotationPageState extends State<CreateQuotationPage> {
             shrinkWrap: true,
             itemBuilder: (context, index) {
               return QuotationProductTile(
-                onSubmitRate: () => _quotationController!.calculateWithTax(index),
+                onSubmitRate: () =>
+                    _quotationController!.calculateWithTax(index),
                 onSubmitRateWithTax: () =>
                     _quotationController!.calculateWithoutTax(index),
                 onPressed: index == 0

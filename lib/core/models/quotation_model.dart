@@ -23,6 +23,7 @@ class QuotationModel extends Quotation {
     required super.roundOff,
     required super.grandTotal,
     required super.grandTotalInWords,
+    required super.termsAndConditions,
   });
 
   QuotationModel copyWith({
@@ -47,6 +48,7 @@ class QuotationModel extends Quotation {
     double? roundOff,
     double? grandTotal,
     String? grandTotalInWords,
+    String? termsAndConditions,
   }) {
     return QuotationModel(
       quotationNumber: quotationNumber ?? this.quotationNumber,
@@ -70,6 +72,7 @@ class QuotationModel extends Quotation {
       roundOff: roundOff ?? this.roundOff,
       grandTotal: grandTotal ?? this.grandTotal,
       grandTotalInWords: grandTotalInWords ?? this.grandTotalInWords,
+      termsAndConditions: termsAndConditions ?? this.termsAndConditions,
     );
   }
 
@@ -90,6 +93,7 @@ class QuotationModel extends Quotation {
       'roundOff': roundOff,
       'grandTotal': grandTotal,
       'grandTotalInWords': grandTotalInWords,
+      'termsAndConditions': termsAndConditions,
       'customerStateName': customerStateName,
       'customerCode': customerCode,
       'shippingName': shippingName,
@@ -122,6 +126,7 @@ class QuotationModel extends Quotation {
       roundOff: quotation.roundOff,
       grandTotal: quotation.grandTotal,
       grandTotalInWords: quotation.grandTotalInWords,
+      termsAndConditions: quotation.termsAndConditions,
     );
   }
 
@@ -138,7 +143,8 @@ class QuotationModel extends Quotation {
       shippingState: map['shippingState'] as String,
       shippingCode: map['shippingCode'] as String,
       issuedDate: DateTime.fromMillisecondsSinceEpoch(map['issuedDate'] as int),
-      validUntilDate: DateTime.fromMillisecondsSinceEpoch(map['validUntilDate'] as int),
+      validUntilDate:
+          DateTime.fromMillisecondsSinceEpoch(map['validUntilDate'] as int),
       products: List<Product>.from(
         (map['products'] as List<dynamic>).map<Product>(
           (x) => Product.fromMap(x as Map<String, dynamic>),
@@ -152,6 +158,7 @@ class QuotationModel extends Quotation {
       roundOff: map['roundOff'] as double,
       grandTotal: map['grandTotal'] as double,
       grandTotalInWords: map['grandTotalInWords'] as String,
+      termsAndConditions: map['termsAndConditions'] ?? "",
     );
   }
 }

@@ -10,6 +10,7 @@ class BasicTextField extends StatelessWidget {
   final bool obscureText;
   final bool readOnly;
   final bool islabelNeeded;
+  final int maxLines;
   const BasicTextField({
     super.key,
     this.icon,
@@ -18,6 +19,7 @@ class BasicTextField extends StatelessWidget {
     this.islabelNeeded = true,
     this.readOnly = false,
     this.obscureText = false,
+    this.maxLines = 1,
   });
 
   @override
@@ -40,6 +42,7 @@ class BasicTextField extends StatelessWidget {
                   ),
                   child: TextFormField(
                     readOnly: readOnly,
+                    maxLines: maxLines,
                     cursorColor: AppColors.primaryColor,
                     cursorErrorColor: AppColors.primaryColor,
                     style: TextStyle(color: AppColors.primaryColor),
@@ -84,6 +87,7 @@ class BasicTextField extends StatelessWidget {
             ),
             child: TextFormField(
               readOnly: readOnly,
+              maxLines: maxLines,
               cursorColor: AppColors.primaryColor,
               cursorErrorColor: AppColors.primaryColor,
               style: TextStyle(color: AppColors.primaryColor),
