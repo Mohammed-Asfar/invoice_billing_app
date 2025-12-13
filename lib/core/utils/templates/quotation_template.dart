@@ -89,7 +89,6 @@ Future<Uint8List> generateQuotationPDF(
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
                 pw.Spacer(),
-                
               ],
             ),
             pw.SizedBox(height: 10),
@@ -281,9 +280,8 @@ Future<Uint8List> generateQuotationPDF(
                 pw.Text(
                     "This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
                     style: pw.TextStyle(fontSize: 10)),
-                pw.SizedBox(height: 5),
                 pw.Text(
-                  "${quotation.termsAndConditions}",
+                  quotation.termsAndConditions,
                   style: pw.TextStyle(fontSize: 10),
                 ),
               ],
