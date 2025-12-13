@@ -84,17 +84,12 @@ Future<Uint8List> generateQuotationPDF(
               mainAxisAlignment: pw.MainAxisAlignment.center,
               children: [
                 pw.Spacer(),
-                pw.SizedBox(width: 100),
                 pw.Text(
                   "QUOTATION",
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                 ),
                 pw.Spacer(),
-                pw.Text(
-                  "(ORIGINAL FOR RECIPIENT)",
-                  textAlign: pw.TextAlign.right,
-                  style: pw.TextStyle(fontSize: 8),
-                ),
+                
               ],
             ),
             pw.SizedBox(height: 10),
@@ -273,29 +268,26 @@ Future<Uint8List> generateQuotationPDF(
             pw.Text("Total in Words: ${quotation.grandTotalInWords}",
                 style: pw.TextStyle(fontSize: 8)),
 
-           
-            pw.SizedBox(height: 300),
-           pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        "Terms and Conditions:\n",
-                        style: pw.TextStyle(
-                            fontSize: 12, fontWeight: pw.FontWeight.bold),
-                      ),
-                      pw.SizedBox(height: 5),
-                      pw.Text(
-                "This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
-                style: pw.TextStyle(fontSize: 10)),
-                      pw.SizedBox(height: 5),
-                      pw.Text(
-                        "${quotation.termsAndConditions}",
-                        style: pw.TextStyle(fontSize: 10),
-                      ),
-                    ],
-                  ),
             pw.SizedBox(height: 10),
-
+            pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  "Terms and Conditions:\n",
+                  style: pw.TextStyle(
+                      fontSize: 12, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 5),
+                pw.Text(
+                    "This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
+                    style: pw.TextStyle(fontSize: 10)),
+                pw.SizedBox(height: 5),
+                pw.Text(
+                  "${quotation.termsAndConditions}",
+                  style: pw.TextStyle(fontSize: 10),
+                ),
+              ],
+            ),
             pw.Spacer(),
             pw.SizedBox(height: 50),
             // Signatory Section
