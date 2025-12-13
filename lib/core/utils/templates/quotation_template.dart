@@ -273,14 +273,9 @@ Future<Uint8List> generateQuotationPDF(
             pw.Text("Total in Words: ${quotation.grandTotalInWords}",
                 style: pw.TextStyle(fontSize: 8)),
 
-            pw.SizedBox(height: 30),
-            pw.Text(
-                "This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
-                style: pw.TextStyle(fontSize: 10)),
-            pw.SizedBox(height: 10),
-            quotation.termsAndConditions.isEmpty
-                ? pw.Container()
-                : pw.Column(
+           
+            pw.SizedBox(height: 300),
+           pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
                       pw.Text(
@@ -288,6 +283,10 @@ Future<Uint8List> generateQuotationPDF(
                         style: pw.TextStyle(
                             fontSize: 12, fontWeight: pw.FontWeight.bold),
                       ),
+                      pw.SizedBox(height: 5),
+                      pw.Text(
+                "This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
+                style: pw.TextStyle(fontSize: 10)),
                       pw.SizedBox(height: 5),
                       pw.Text(
                         "${quotation.termsAndConditions}",
