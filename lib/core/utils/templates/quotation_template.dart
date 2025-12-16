@@ -145,7 +145,7 @@ Future<Uint8List> generateQuotationPDF(
                   child: pw.Column(
                     crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text("Billed To:",
+                      pw.Text("To:",
                           style: pw.TextStyle(
                               fontWeight: pw.FontWeight.bold, fontSize: 12)),
                       _infoTable([

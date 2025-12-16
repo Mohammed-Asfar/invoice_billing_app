@@ -83,8 +83,7 @@ class _CreateQuotationPageState extends State<CreateQuotationPage> {
                   onTap: () async {
                     DateTime? datePicker = await showDatePicker(
                       context: context,
-                      firstDate:
-                          DateTime(DateTime.now().year, DateTime.now().month),
+                      firstDate: DateTime(2000, 1, 1),
                       lastDate: DateTime(
                           DateTime.now().year, DateTime.now().month + 1, 0),
                     );
