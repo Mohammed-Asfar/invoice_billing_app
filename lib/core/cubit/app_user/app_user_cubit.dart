@@ -27,15 +27,18 @@ class AppUserCubit extends Cubit<AppUserState> {
   }
 
   Future<void> updateUser() async {
+    if (isClosed) return;
     emit(AppUserLoading());
 
     try {
       loginStream.listen((user_) async {
+        if (isClosed) return;
         emit(AppUserLoading());
 
         if (user_ != null) {
           final data =
               await _appUserRemoteDatasource.getUserData(uid: user_.uid);
+          if (isClosed) return;
           if (data != null) {
             user = UserModel.fromMap(data as Map<String, dynamic>);
             emit(AppUserLoggedIn(user));
@@ -48,15 +51,18 @@ class AppUserCubit extends Cubit<AppUserState> {
         }
       });
     } catch (e) {
+      if (isClosed) return;
       emit(AppUserFailure(e.toString()));
     }
   }
 
   void userLogout() async {
+    if (isClosed) return;
     emit(AppUserLoading());
     try {
       await _firebaseAuth.signOut();
     } catch (e) {
+      if (isClosed) return;
       emit(AppUserFailure(e.toString()));
     }
   }

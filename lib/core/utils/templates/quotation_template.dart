@@ -129,7 +129,7 @@ Future<Uint8List> generateQuotationPDF(
               children: [
                 pw.Text("Quotation No: ${quotation.quotationNumber}",
                     style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold, fontSize: 12)),
+                        fontWeight: pw.FontWeight.bold, fontSize: 10)),
                 pw.Text("Date: ${dateFormat(quotation.issuedDate)}",
                     style: pw.TextStyle(
                         fontWeight: pw.FontWeight.bold, fontSize: 12)),
@@ -227,7 +227,8 @@ Future<Uint8List> generateQuotationPDF(
                   return pw.TableRow(
                     children: [
                       _tableCell(countNum.toString()),
-                      _tableCell(product.description, isDetails: true),
+                      _tableCell(product.description.replaceAll('\$', '\n'),
+                          isDetails: true),
                       _tableCell(product.quantity.toString()),
                       _tableCell(product.rate.toStringAsFixed(2)),
                       _tableCell(product.per),
@@ -271,18 +272,30 @@ Future<Uint8List> generateQuotationPDF(
             pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
+                pw.Text("Company Bank Details:",
+                    style: pw.TextStyle(
+                        fontWeight: pw.FontWeight.bold, fontSize: 10)),
+                pw.Text("Name: M/S TBS ENTERPRISES",
+                    style: pw.TextStyle(fontSize: 8)),
+                pw.Text("A/c No: ${user.companyAccountNumber}",
+                    style: pw.TextStyle(fontSize: 8)),
+                pw.Text("IFSC: ${user.accountIFSC}",
+                    style: pw.TextStyle(fontSize: 8)),
+                pw.Text("Bank: ${user.bankName}, Branch: ${user.bankBranch}",
+                    style: pw.TextStyle(fontSize: 8)),
+                pw.SizedBox(height: 10),
                 pw.Text(
                   "Terms and Conditions:\n",
                   style: pw.TextStyle(
-                      fontSize: 12, fontWeight: pw.FontWeight.bold),
+                      fontSize: 10, fontWeight: pw.FontWeight.bold),
                 ),
-                pw.SizedBox(height: 5),
+                pw.SizedBox(height: 2),
                 pw.Text(
                     "This quotation is valid until ${dateFormat(quotation.validUntilDate)}.",
-                    style: pw.TextStyle(fontSize: 10)),
+                    style: pw.TextStyle(fontSize: 8)),
                 pw.Text(
                   quotation.termsAndConditions,
-                  style: pw.TextStyle(fontSize: 10),
+                  style: pw.TextStyle(fontSize: 8),
                 ),
               ],
             ),

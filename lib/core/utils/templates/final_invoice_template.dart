@@ -185,7 +185,8 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
                   return pw.TableRow(
                     children: [
                       _tableCell(countNum.toString()),
-                      _tableCell(product.description, isDetails: true),
+                      _tableCell(product.description.replaceAll('\$', '\n'),
+                          isDetails: true),
                       _tableCell(product.hsn),
                       _tableCell(product.quantity.toString()),
                       _tableCell(product.per),
@@ -217,7 +218,7 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
 
             _totalRow("Round Off: ", invoice.roundOff, isNegative: true),
             pw.Text(
-                "Total GST Amount(${invoice.cgstPercent+ invoice.sgstPercent}%):  ₹ ${invoice.cgstAmount + invoice.sgstAmount}",
+                "Total GST Amount(${invoice.cgstPercent + invoice.sgstPercent}%):  ₹ ${invoice.cgstAmount + invoice.sgstAmount}",
                 style: pw.TextStyle(fontSize: 8)),
 
             pw.Divider(),

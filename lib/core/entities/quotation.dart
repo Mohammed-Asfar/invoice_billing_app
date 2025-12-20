@@ -79,13 +79,19 @@ class Product {
   }
 
   static Product fromMap(Map<String, dynamic> map) {
+    // Helper functions to handle MongoDB Int64 type
+    int toInt(dynamic value) =>
+        value is int ? value : (value as dynamic).toInt();
+    double toDouble(dynamic value) =>
+        value is double ? value : (value as dynamic).toDouble();
+
     return Product(
       description: map['description'] as String,
-      quantity: map['quantity'] as int,
-      rate: map['rate'] as double,
-      rateWithTax: map['rateWithTax'] as double,
+      quantity: toInt(map['quantity']),
+      rate: toDouble(map['rate']),
+      rateWithTax: toDouble(map['rateWithTax']),
       per: map['per'] as String,
-      totalPrice: map['totalPrice'] as double,
+      totalPrice: toDouble(map['totalPrice']),
     );
   }
 }

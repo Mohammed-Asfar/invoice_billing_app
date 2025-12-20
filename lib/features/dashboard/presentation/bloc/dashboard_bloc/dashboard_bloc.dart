@@ -13,6 +13,7 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
       : _dashboardRepository = dashboardRepository,
         super(DashboardInitial()) {
     on<DashboardSearch>(_onDashboardSearch);
+    on<FetchDashboardStats>(_onFetchDashboardStats);
   }
 
   void _onDashboardSearch(
@@ -25,6 +26,21 @@ class DashboardBloc extends Bloc<DashboardEvent, DashboardState> {
     result.fold(
       (failure) => emit(DashboardFailure(failure.message)),
       (invoices) => emit(DashboardSuccess(invoices: invoices)),
+    );
+  }
+
+  void _onFetchDashboardStats(
+      FetchDashboardStats event, Emitter<DashboardState> emit) async {
+    final result = await _dashboardRepository.getStats();
+
+    result.fold(
+      (failure) => emit(DashboardFailure(failure.message)),
+      (stats) => emit(DashboardStatsLoaded(
+        totalInvoices: stats['totalInvoices'] ?? 0,
+        totalQuotations: stats['totalQuotations'] ?? 0,
+        thisMonthInvoices: stats['thisMonthInvoices'] ?? 0,
+        thisMonthQuotations: stats['thisMonthQuotations'] ?? 0,
+      )),
     );
   }
 }

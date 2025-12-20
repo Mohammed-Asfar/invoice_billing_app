@@ -45,10 +45,15 @@ class _QuotationProductTileState extends State<QuotationProductTile> {
   void _capitalizeText(TextEditingController controller, String value) {
     if (value.isNotEmpty) {
       final capitalized = value[0].toUpperCase() + value.substring(1);
-      controller.value = TextEditingValue(
-        text: capitalized,
-        selection: TextSelection.collapsed(offset: capitalized.length),
-      );
+      // Only update if the text actually changed (first letter capitalization)
+      if (controller.text != capitalized) {
+        // Preserve the current cursor position
+        final currentSelection = controller.selection;
+        controller.value = TextEditingValue(
+          text: capitalized,
+          selection: currentSelection,
+        );
+      }
     }
   }
 

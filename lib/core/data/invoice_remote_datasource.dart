@@ -166,4 +166,51 @@ class InvoiceRemoteDatasource {
       throw ServerException('Error update invoice: $e');
     }
   }
+
+  /// Get invoice statistics: total count and this month's count
+  Future<Map<String, dynamic>> getInvoiceStats() async {
+    if (await checkConnection()) {
+      throw ServerException("No Internet Connection.");
+    }
+    try {
+      final now = DateTime.now();
+      final currentMonth = now.month;
+      final currentYear = now.year;
+
+      final queryResults = await collection.find().toList();
+
+      int totalCount = 0;
+      int thisMonthCount = 0;
+
+      for (var doc in queryResults) {
+        final invoiceKey = doc.keys
+            .firstWhere((key) => key.startsWith("invoice_"), orElse: () => "");
+
+        if (invoiceKey.isNotEmpty) {
+          final invoiceData = doc[invoiceKey];
+          totalCount++;
+
+          // Check if this month's invoice
+          final issuedDate = invoiceData['issuedDate'];
+          if (issuedDate != null) {
+            int timestamp = issuedDate is int
+                ? issuedDate
+                : (issuedDate as dynamic).toInt();
+            final invoiceDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+            if (invoiceDate.month == currentMonth &&
+                invoiceDate.year == currentYear) {
+              thisMonthCount++;
+            }
+          }
+        }
+      }
+
+      return {
+        'totalCount': totalCount,
+        'thisMonthCount': thisMonthCount,
+      };
+    } catch (e) {
+      throw ServerException('Error fetching invoice stats: $e');
+    }
+  }
 }

@@ -18,14 +18,25 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late TextEditingController searchBarController;
 
+  // Stats data
+  int totalInvoices = 0;
+  int totalQuotations = 0;
+  int thisMonthInvoices = 0;
+  int thisMonthQuotations = 0;
+
   @override
   void initState() {
     super.initState();
     searchBarController = context.read<AppUserCubit>().searchBarController;
     searchBarController.addListener(_onSearchChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final searchText = searchBarController.text.trim();
-      context.read<DashboardBloc>().add(DashboardSearch(searchText));
+      final bloc = context.read<DashboardBloc>();
+      if (!bloc.isClosed) {
+        bloc.add(DashboardSearch(searchText));
+        bloc.add(FetchDashboardStats());
+      }
     });
   }
 
@@ -37,9 +48,11 @@ class _DashboardPageState extends State<DashboardPage> {
 
   void _onSearchChanged() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context
-          .read<DashboardBloc>()
-          .add(DashboardSearch(searchBarController.text.trim()));
+      if (!mounted) return;
+      final bloc = context.read<DashboardBloc>();
+      if (!bloc.isClosed) {
+        bloc.add(DashboardSearch(searchBarController.text.trim()));
+      }
     });
   }
 
@@ -60,9 +73,52 @@ class _DashboardPageState extends State<DashboardPage> {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
         child: Column(
           children: [
-            SizedBox(
-              height: 20,
+            SizedBox(height: 20),
+            // Statistics Cards Row
+            BlocListener<DashboardBloc, DashboardState>(
+              listener: (context, state) {
+                if (state is DashboardStatsLoaded) {
+                  setState(() {
+                    totalInvoices = state.totalInvoices;
+                    totalQuotations = state.totalQuotations;
+                    thisMonthInvoices = state.thisMonthInvoices;
+                    thisMonthQuotations = state.thisMonthQuotations;
+                  });
+                }
+              },
+              child: Row(
+                children: [
+                  _buildStatCard(
+                    icon: Icons.receipt_long_rounded,
+                    value: totalInvoices.toString(),
+                    label: 'Total Invoices',
+                    color: AppColors.secondaryColor,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildStatCard(
+                    icon: Icons.description_rounded,
+                    value: totalQuotations.toString(),
+                    label: 'Total Quotations',
+                    color: AppColors.secondaryColor,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildStatCard(
+                    icon: Icons.calendar_today_rounded,
+                    value: thisMonthInvoices.toString(),
+                    label: 'Invoices This Month',
+                    color: AppColors.secondaryColor,
+                  ),
+                  const SizedBox(width: 16),
+                  _buildStatCard(
+                    icon: Icons.event_note_rounded,
+                    value: thisMonthQuotations.toString(),
+                    label: 'Quotations This Month',
+                    color: AppColors.secondaryColor,
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 20),
             BasicTextField(
               icon: Icons.search_rounded,
               islabelNeeded: false,
@@ -71,8 +127,11 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             SizedBox(height: 20),
             Expanded(
-              child: BlocConsumer<DashboardBloc, DashboardState>(
-                listener: (context, state) {},
+              child: BlocBuilder<DashboardBloc, DashboardState>(
+                buildWhen: (previous, current) =>
+                    current is DashboardLoading ||
+                    current is DashboardSuccess ||
+                    current is DashboardFailure,
                 builder: (context, state) {
                   if (state is DashboardLoading) {
                     return Loader();
@@ -95,11 +154,17 @@ class _DashboardPageState extends State<DashboardPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          onTap: () {
-                            Navigator.of(context).push(MaterialPageRoute(
+                          onTap: () async {
+                            final bloc = context.read<DashboardBloc>();
+                            await Navigator.of(context).push(MaterialPageRoute(
                               builder: (context) => EditMainInvoicePage(
                                   invoice: state.invoices[index]),
                             ));
+                            // Refresh stats after returning
+                            if (!mounted) return;
+                            if (!bloc.isClosed) {
+                              bloc.add(FetchDashboardStats());
+                            }
                           },
                           leading: CircleAvatar(
                             backgroundColor: AppColors.primaryColor,
@@ -127,6 +192,59 @@ class _DashboardPageState extends State<DashboardPage> {
                 },
               ),
             )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required Color color,
+  }) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withAlpha(30),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withAlpha(60), width: 1),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withAlpha(50),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const Spacer(),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: AppColors.fontColor,
+              ),
+            ),
           ],
         ),
       ),

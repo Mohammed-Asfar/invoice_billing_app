@@ -8,3 +8,5 @@ final class DashboardSearch extends DashboardEvent {
 
   DashboardSearch(this.searchText);
 }
+
+final class FetchDashboardStats extends DashboardEvent {}

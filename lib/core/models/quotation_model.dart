@@ -131,6 +131,12 @@ class QuotationModel extends Quotation {
   }
 
   factory QuotationModel.fromMap(Map<String, dynamic> map) {
+    // Helper functions to handle MongoDB Int64 type
+    int toInt(dynamic value) =>
+        value is int ? value : (value as dynamic).toInt();
+    double toDouble(dynamic value) =>
+        value is double ? value : (value as dynamic).toDouble();
+
     return QuotationModel(
       quotationNumber: map['quotationNumber'] as String,
       customerName: map['customerName'] as String,
@@ -142,21 +148,21 @@ class QuotationModel extends Quotation {
       shippingAddress: map['shippingAddress'] as String,
       shippingState: map['shippingState'] as String,
       shippingCode: map['shippingCode'] as String,
-      issuedDate: DateTime.fromMillisecondsSinceEpoch(map['issuedDate'] as int),
+      issuedDate: DateTime.fromMillisecondsSinceEpoch(toInt(map['issuedDate'])),
       validUntilDate:
-          DateTime.fromMillisecondsSinceEpoch(map['validUntilDate'] as int),
+          DateTime.fromMillisecondsSinceEpoch(toInt(map['validUntilDate'])),
       products: List<Product>.from(
         (map['products'] as List<dynamic>).map<Product>(
           (x) => Product.fromMap(x as Map<String, dynamic>),
         ),
       ),
-      subTotal: map['subTotal'] as double,
-      sgstPercent: map['sgstPercent'] as double,
-      cgstPercent: map['cgstPercent'] as double,
-      sgstAmount: map['sgstAmount'] as double,
-      cgstAmount: map['cgstAmount'] as double,
-      roundOff: map['roundOff'] as double,
-      grandTotal: map['grandTotal'] as double,
+      subTotal: toDouble(map['subTotal']),
+      sgstPercent: toDouble(map['sgstPercent']),
+      cgstPercent: toDouble(map['cgstPercent']),
+      sgstAmount: toDouble(map['sgstAmount']),
+      cgstAmount: toDouble(map['cgstAmount']),
+      roundOff: toDouble(map['roundOff']),
+      grandTotal: toDouble(map['grandTotal']),
       grandTotalInWords: map['grandTotalInWords'] as String,
       termsAndConditions: map['termsAndConditions'] ?? "",
     );

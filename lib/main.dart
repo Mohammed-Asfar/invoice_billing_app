@@ -16,6 +16,8 @@ import 'package:invoice_billing_app/features/invoice/presentation/bloc/create_in
 import 'package:invoice_billing_app/features/invoice_edit/presentation/bloc/edit_invoice_bloc.dart';
 import 'package:invoice_billing_app/features/main_navigation/presentation/pages/main_navigation_page.dart';
 import 'package:invoice_billing_app/features/settings/presentation/bloc/settings_bloc.dart';
+import 'package:invoice_billing_app/features/quotation/presentation/bloc/quotation_bloc.dart';
+import 'package:invoice_billing_app/features/quotation_edit/presentation/bloc/edit_quotation_bloc.dart';
 import 'package:invoice_billing_app/init_dependencies.dart';
 import 'package:window_manager/window_manager.dart';
 import 'core/theme/app_theme.dart';
@@ -93,6 +95,12 @@ class _MyAppState extends State<MyApp> {
                 ),
                 BlocProvider(
                   create: (context) => serviceLocator<SettingsBloc>(),
+                ),
+                BlocProvider(
+                  create: (context) => serviceLocator<QuotationBloc>(),
+                ),
+                BlocProvider(
+                  create: (context) => serviceLocator<EditQuotationBloc>(),
                 ),
               ],
               child: StartingPage(),

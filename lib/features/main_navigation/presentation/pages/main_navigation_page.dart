@@ -9,6 +9,7 @@ import 'package:invoice_billing_app/features/dashboard/presentation/pages/dashbo
 import 'package:invoice_billing_app/features/invoice/presentation/pages/invoice_page.dart';
 import 'package:invoice_billing_app/features/main_navigation/presentation/widgets/navigator_list_tile.dart';
 import 'package:invoice_billing_app/features/quotation/presentation/pages/quotation_page.dart';
+import 'package:invoice_billing_app/features/quotation/presentation/pages/quotation_list_page.dart';
 import 'package:invoice_billing_app/features/settings/presentation/pages/settings_page.dart';
 // import 'package:invoice_billing_app/features/templates/presentation/pages/templates_page.dart';
 
@@ -27,6 +28,7 @@ class MainNavigationPage extends StatefulWidget {
 class _MainNavigationPageState extends State<MainNavigationPage> {
   List<Widget> pages = [
     DashboardPage(),
+    QuotationListPage(),
     InvoicePage(),
     QuotationPage(),
     // TemplatesPage(),
@@ -134,8 +136,8 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                             selectedPage = 1;
                           });
                         },
-                        icon: Icons.request_quote,
-                        title: "Invoice",
+                        icon: Icons.list_alt_rounded,
+                        title: "Quotation List",
                       ),
                       NavigatorListTile(
                         isAnimationOver: isAnimationOver,
@@ -146,8 +148,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                             selectedPage = 2;
                           });
                         },
+                        icon: Icons.request_quote,
+                        title: "Invoice",
+                      ),
+                      NavigatorListTile(
+                        isAnimationOver: isAnimationOver,
+                        ishidden: ishidden,
+                        isSelected: selectedPage == 3,
+                        onTap: () {
+                          setState(() {
+                            selectedPage = 3;
+                          });
+                        },
                         icon: Icons.description_rounded,
-                        title: "Quotation",
+                        title: "Create Quotation",
                       ),
                       SizedBox(
                         height: 10,
@@ -185,10 +199,10 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
                       NavigatorListTile(
                         isAnimationOver: isAnimationOver,
                         ishidden: ishidden,
-                        isSelected: selectedPage == 3,
+                        isSelected: selectedPage == 4,
                         onTap: () {
                           setState(() {
-                            selectedPage = 3;
+                            selectedPage = 4;
                           });
                         },
                         icon: Icons.settings_rounded,

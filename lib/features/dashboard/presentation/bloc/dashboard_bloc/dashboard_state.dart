@@ -18,3 +18,17 @@ final class DashboardSuccess extends DashboardState {
 
   DashboardSuccess({required this.invoices});
 }
+
+final class DashboardStatsLoaded extends DashboardState {
+  final int totalInvoices;
+  final int totalQuotations;
+  final int thisMonthInvoices;
+  final int thisMonthQuotations;
+
+  DashboardStatsLoaded({
+    required this.totalInvoices,
+    required this.totalQuotations,
+    required this.thisMonthInvoices,
+    required this.thisMonthQuotations,
+  });
+}

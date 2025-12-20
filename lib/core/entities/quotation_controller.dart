@@ -5,6 +5,8 @@ import 'package:invoice_billing_app/core/utils/number_to_word.dart';
 import 'package:invoice_billing_app/core/entities/quotation_product_controller.dart';
 
 class QuotationController {
+  QuotationController();
+
   List<QuotationProductController> productControllers = [
     QuotationProductController(
       description: TextEditingController(),
@@ -39,6 +41,54 @@ class QuotationController {
 
   DateTime issuedDateController = DateTime.now();
   DateTime validUntilDateController = DateTime.now().add(Duration(days: 30));
+
+  /// Factory constructor to create a QuotationController from an existing Quotation
+  factory QuotationController.fromQuotation(Quotation quotation) {
+    final controller = QuotationController();
+    controller.quotationNoController.text = quotation.quotationNumber;
+    controller.customerNameController.text = quotation.customerName;
+    controller.customerPhoneController.text = quotation.customerPhone;
+    controller.customerAddressController.text = quotation.customerAddress;
+    controller.customerStateNameController.text = quotation.customerStateName;
+    controller.customerCodeController.text = quotation.customerCode;
+    controller.shippingNameController.text = quotation.shippingName;
+    controller.shippingAddressController.text = quotation.shippingAddress;
+    controller.shippingStateController.text = quotation.shippingState;
+    controller.shippingCodeController.text = quotation.shippingCode;
+    controller.issuedDateController = quotation.issuedDate;
+    controller.validUntilDateController = quotation.validUntilDate;
+    controller.subTotalController.text = quotation.subTotal.toStringAsFixed(2);
+    controller.sgsttaxController.text =
+        quotation.sgstPercent.toStringAsFixed(0);
+    controller.cgsttaxController.text =
+        quotation.cgstPercent.toStringAsFixed(0);
+    controller.sgstController.text = quotation.sgstAmount.toStringAsFixed(2);
+    controller.cgstController.text = quotation.cgstAmount.toStringAsFixed(2);
+    controller.roundOffController.text = quotation.roundOff.toStringAsFixed(2);
+    controller.grandTotalController.text =
+        quotation.grandTotal.toStringAsFixed(2);
+    controller.grandTotalInWordsController.text = quotation.grandTotalInWords;
+    controller.termsAndConditionsController.text = quotation.termsAndConditions;
+
+    // Populate product controllers
+    controller.productControllers.clear();
+    for (var product in quotation.products) {
+      controller.productControllers.add(
+        QuotationProductController(
+          description: TextEditingController(text: product.description),
+          quantity: TextEditingController(text: product.quantity.toString()),
+          rate: TextEditingController(text: product.rate.toString()),
+          rateWithTax:
+              TextEditingController(text: product.rateWithTax.toString()),
+          per: TextEditingController(text: product.per),
+          totalPrice:
+              TextEditingController(text: product.totalPrice.toString()),
+        ),
+      );
+    }
+
+    return controller;
+  }
 
   void addProductController() {
     productControllers.add(

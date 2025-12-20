@@ -6,6 +6,7 @@ import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/data/app_user_remote_datasource.dart';
 import 'package:invoice_billing_app/core/data/auth_remote_datasources.dart';
 import 'package:invoice_billing_app/core/data/invoice_remote_datasource.dart';
+import 'package:invoice_billing_app/core/data/quotation_remote_datasource.dart';
 import 'package:invoice_billing_app/core/secrets/secrets.dart';
 import 'package:invoice_billing_app/core/utils/firebase_options.dart';
 import 'package:invoice_billing_app/features/auth/domain/auth_repository.dart';
@@ -16,6 +17,9 @@ import 'package:invoice_billing_app/features/invoice/domain/repository/invoice_r
 import 'package:invoice_billing_app/features/invoice/presentation/bloc/create_invoice_bloc.dart';
 import 'package:invoice_billing_app/features/invoice_edit/domain/repository/edit_invoice_repository.dart';
 import 'package:invoice_billing_app/features/invoice_edit/presentation/bloc/edit_invoice_bloc.dart';
+import 'package:invoice_billing_app/features/quotation/domain/repository/quotation_repository.dart';
+import 'package:invoice_billing_app/features/quotation/presentation/bloc/quotation_bloc.dart';
+import 'package:invoice_billing_app/features/quotation_edit/presentation/bloc/edit_quotation_bloc.dart';
 import 'package:invoice_billing_app/features/settings/domain/repository/settings_repository.dart';
 import 'package:invoice_billing_app/features/settings/presentation/bloc/settings_bloc.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongodart;
@@ -51,6 +55,11 @@ Future<bool> initDependencies() async {
         mongoDb: serviceLocator(),
       ),
     );
+    serviceLocator.registerLazySingleton<QuotationRemoteDatasource>(
+      () => QuotationRemoteDatasource(
+        mongoDb: serviceLocator(),
+      ),
+    );
     serviceLocator.registerLazySingleton<AuthRemoteDatasources>(
       () => AuthRemoteDatasources(
         firebaseAuth: serviceLocator(),
@@ -67,6 +76,7 @@ Future<bool> initDependencies() async {
     _initDashboard();
     _initEditInvoice();
     _initSettings();
+    _initQuotation();
   } catch (e) {
     return false;
   }
@@ -99,7 +109,10 @@ void _initCreateInvoice() {
 
 void _initDashboard() {
   serviceLocator.registerFactory<DashboardRepository>(
-    () => DashboardRepository(invoiceRemoteDatasource: serviceLocator()),
+    () => DashboardRepository(
+      invoiceRemoteDatasource: serviceLocator(),
+      quotationRemoteDatasource: serviceLocator(),
+    ),
   );
 
   serviceLocator.registerLazySingleton(
@@ -124,5 +137,22 @@ void _initSettings() {
 
   serviceLocator.registerLazySingleton(
     () => SettingsBloc(settingsRepository: serviceLocator()),
+  );
+}
+
+void _initQuotation() {
+  serviceLocator.registerFactory<QuotationRepository>(
+    () => QuotationRepository(quotationRemoteDatasource: serviceLocator()),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => QuotationBloc(
+      quotationRepository: serviceLocator(),
+      appUserCubit: serviceLocator(),
+    ),
+  );
+
+  serviceLocator.registerLazySingleton(
+    () => EditQuotationBloc(quotationRepository: serviceLocator()),
   );
 }
