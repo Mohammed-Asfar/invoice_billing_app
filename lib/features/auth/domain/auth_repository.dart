@@ -3,10 +3,10 @@ import 'package:fpdart/fpdart.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/failure.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
-import 'package:invoice_billing_app/core/data/auth_remote_datasources.dart';
+import 'package:invoice_billing_app/core/domain/datasources/auth_datasource.dart';
 
 class AuthRepository {
-  final AuthRemoteDatasources authRemoteDatasources;
+  final AuthDatasource authRemoteDatasources;
   AuthRepository({required this.authRemoteDatasources});
 
   Future<Either<Failure, User>> signWithEmailPassword(

@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
-import 'package:fixnum/fixnum.dart';
 import 'package:flutter/foundation.dart';
 import 'package:invoice_billing_app/core/entities/invoice.dart';
 import 'package:invoice_billing_app/core/models/product_model.dart';
@@ -142,7 +141,7 @@ class InvoiceModel extends Invoice {
       customerAddress: map['customerAddress'] as String,
       customerGSTIN: map['customerGSTIN'] as String,
       issuedDate: DateTime.fromMillisecondsSinceEpoch(
-          (map['issuedDate'] as Int64).toInt()),
+          (map['issuedDate'] as num).toInt()),
       products: List<ProductModel>.from(
         (map['products'] as List).map<ProductModel>(
           (x) => ProductModel.fromMap(x as Map<String, dynamic>),

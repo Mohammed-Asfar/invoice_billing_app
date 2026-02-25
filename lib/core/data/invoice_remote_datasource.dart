@@ -1,17 +1,21 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:invoice_billing_app/core/domain/datasources/invoice_datasource.dart';
 import 'package:invoice_billing_app/core/entities/invoice.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 import 'package:invoice_billing_app/core/models/invoice_model.dart';
 import 'package:invoice_billing_app/core/network_handle/check_connection.dart';
 import 'package:invoice_billing_app/core/utils/print_invoice.dart';
-import 'package:mongo_dart/mongo_dart.dart';
 
-class InvoiceRemoteDatasource {
-  final Db _mongoDb;
-  late DbCollection collection = _mongoDb.collection("dataBase");
+class InvoiceRemoteDatasource implements InvoiceDatasource {
+  final FirebaseFirestore _firestore;
+  late CollectionReference<Map<String, dynamic>> collection =
+      _firestore.collection("invoices");
 
-  InvoiceRemoteDatasource({required Db mongoDb}) : _mongoDb = mongoDb;
+  InvoiceRemoteDatasource({required FirebaseFirestore firebaseFirestore})
+      : _firestore = firebaseFirestore;
 
+  @override
   Future<String> printInvoiceDocument(
       {required Invoice invoice, required User user}) async {
     if (await checkConnection()) {
@@ -21,21 +25,20 @@ class InvoiceRemoteDatasource {
       await printInvoice(invoice: invoice, user: user);
       return 'Invoice generated successfully';
     } catch (e) {
-      throw 'Error generating Invoice';
+      throw ServerException('Error generating Invoice');
     }
   }
 
+  @override
   Future<String> uploadInvoiceData(
       {required Invoice invoice, required User user}) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      await collection.insert({
-        "_id": invoice.invoiceNumber,
-        "invoice_${invoice.invoiceNumber}":
-            InvoiceModel.fromEntity(invoice).toMap()
-      });
+      await collection
+          .doc(invoice.invoiceNumber)
+          .set(InvoiceModel.fromEntity(invoice).toMap());
       await printInvoiceDocument(invoice: invoice, user: user);
       return 'Invoice generated successfully';
     } catch (e) {
@@ -43,6 +46,7 @@ class InvoiceRemoteDatasource {
     }
   }
 
+  @override
   Future<String> getNextInvoiceNumber() async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
@@ -52,36 +56,35 @@ class InvoiceRemoteDatasource {
       final year = now.year;
       final month = now.month.toString().padLeft(2, '0');
 
-      // Fetch all invoice documents
-      final latestInvoices = await collection.find().toList();
+      // Query invoices whose invoiceNumber starts with the current year-month prefix
+      final prefix = "$year-$month";
+      final snapshot = await collection
+          .where('invoiceNumber', isGreaterThanOrEqualTo: prefix)
+          .where('invoiceNumber', isLessThan: "${prefix}z")
+          .get();
 
-      // Extract invoice numbers in the format "invoice_YYYY-MMNN"
-      List<int> invoiceNumbers = latestInvoices
+      List<int> invoiceNumbers = snapshot.docs
           .map((doc) {
-            final invoiceKey = doc.keys.firstWhere(
-                (key) => key.startsWith("invoice_$year-$month"),
-                orElse: () => "");
-            if (invoiceKey.isNotEmpty) {
+            final invoiceNumber = doc.data()['invoiceNumber'] as String?;
+            if (invoiceNumber != null) {
               final match =
-                  RegExp(r"(\d{4})-(\d{2})(\d{2})$").firstMatch(invoiceKey);
+                  RegExp(r"(\d{4})-(\d{2})(\d{2})$").firstMatch(invoiceNumber);
               if (match != null) {
-                return int.parse(match.group(3)!); // Extract last NN part
+                return int.parse(match.group(3)!);
               }
             }
             return 0;
           })
-          .where((num) => num > 0) // Remove invalid values
+          .where((n) => n > 0)
           .toList();
 
-      int nextNumber = 1; // Default if no invoices exist
+      int nextNumber = 1;
 
       if (invoiceNumbers.isNotEmpty) {
-        // Sort numerically
         invoiceNumbers.sort();
         nextNumber = invoiceNumbers.last + 1;
       }
 
-      // Format as "YYYY-MMNN" (e.g., 2025-0101, 2025-0110)
       final nextInvoiceNumber =
           "$year-$month${nextNumber.toString().padLeft(2, '0')}";
 
@@ -91,37 +94,25 @@ class InvoiceRemoteDatasource {
     }
   }
 
+  @override
   Future<List<Invoice?>> getInvoices({String search = ""}) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      // Assume we're fetching data from some external source or database.
-      List<Map<String, dynamic>> queryResults;
+      final snapshot = await collection.get();
 
-      queryResults = await collection.find().toList();
-
-      // Map the query result to a list of Invoice objects
-      List<Invoice?> invoices = queryResults.map((doc) {
-        final invoiceKey = doc.keys
-            .firstWhere((key) => key.startsWith("invoice_"), orElse: () => "");
-
-        if (invoiceKey.isNotEmpty) {
-          final res =
-              InvoiceModel.fromEntity(InvoiceModel.fromMap(doc[invoiceKey]));
-
+      List<Invoice?> invoices = snapshot.docs.map((doc) {
+        try {
+          final res = InvoiceModel.fromEntity(InvoiceModel.fromMap(doc.data()));
           if (res.invoiceNumber.contains(search)) {
             return res;
           }
-        }
+        } catch (_) {}
+        return null;
       }).toList();
 
-      invoices.removeWhere(
-        (element) {
-          return element == null;
-        },
-      );
-
+      invoices.removeWhere((element) => element == null);
       invoices.sort((a, b) => a!.invoiceNumber.compareTo(b!.invoiceNumber));
       invoices = invoices.reversed.toList();
 
@@ -131,36 +122,28 @@ class InvoiceRemoteDatasource {
     }
   }
 
+  @override
   Future<String> deleteInvoice(Invoice invoice) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      // Find and delete the invoice from the database
-
-      await collection.deleteOne({"_id": invoice.invoiceNumber},
-          collation: CollationOptions('fr', strength: 1));
-
-      // Optionally, show a success message
+      await collection.doc(invoice.invoiceNumber).delete();
       return 'Invoice ${invoice.invoiceNumber} deleted successfully.';
     } catch (e) {
       throw ServerException('Error deleting invoice: $e');
     }
   }
 
+  @override
   Future<String> updateInvoice(Invoice invoice) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      await collection.replaceOne({
-        "_id": invoice.invoiceNumber
-      }, {
-        "invoice_${invoice.invoiceNumber}":
-            InvoiceModel.fromEntity(invoice).toMap()
-      });
-
-      // Optionally, show a success message
+      await collection
+          .doc(invoice.invoiceNumber)
+          .set(InvoiceModel.fromEntity(invoice).toMap());
       return 'Invoice ${invoice.invoiceNumber} updated successfully.';
     } catch (e) {
       throw ServerException('Error update invoice: $e');
@@ -168,6 +151,7 @@ class InvoiceRemoteDatasource {
   }
 
   /// Get invoice statistics: total count and this month's count
+  @override
   Future<Map<String, dynamic>> getInvoiceStats() async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
@@ -177,30 +161,23 @@ class InvoiceRemoteDatasource {
       final currentMonth = now.month;
       final currentYear = now.year;
 
-      final queryResults = await collection.find().toList();
+      final snapshot = await collection.get();
 
       int totalCount = 0;
       int thisMonthCount = 0;
 
-      for (var doc in queryResults) {
-        final invoiceKey = doc.keys
-            .firstWhere((key) => key.startsWith("invoice_"), orElse: () => "");
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        totalCount++;
 
-        if (invoiceKey.isNotEmpty) {
-          final invoiceData = doc[invoiceKey];
-          totalCount++;
-
-          // Check if this month's invoice
-          final issuedDate = invoiceData['issuedDate'];
-          if (issuedDate != null) {
-            int timestamp = issuedDate is int
-                ? issuedDate
-                : (issuedDate as dynamic).toInt();
-            final invoiceDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
-            if (invoiceDate.month == currentMonth &&
-                invoiceDate.year == currentYear) {
-              thisMonthCount++;
-            }
+        final issuedDate = data['issuedDate'];
+        if (issuedDate != null) {
+          int timestamp =
+              issuedDate is int ? issuedDate : (issuedDate as num).toInt();
+          final invoiceDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+          if (invoiceDate.month == currentMonth &&
+              invoiceDate.year == currentYear) {
+            thisMonthCount++;
           }
         }
       }

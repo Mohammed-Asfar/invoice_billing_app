@@ -49,11 +49,11 @@ class ProductModel extends Product {
     return ProductModel(
       description: map['description'] as String,
       hsn: map['hsn'] as String,
-      quantity: map['quantity'] as int,
-      rate: map['rate'] as double,
-      rateWithTax: map['rateWithTax'] as double,
+      quantity: (map['quantity'] as num).toInt(),
+      rate: (map['rate'] as num).toDouble(),
+      rateWithTax: (map['rateWithTax'] as num).toDouble(),
       per: map['per'] as String,
-      totalPrice: map['totalPrice'] as double,
+      totalPrice: (map['totalPrice'] as num).toDouble(),
     );
   }
 

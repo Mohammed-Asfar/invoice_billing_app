@@ -1,17 +1,17 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:invoice_billing_app/core/data/invoice_remote_datasource.dart';
-import 'package:invoice_billing_app/core/data/quotation_remote_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/invoice_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/quotation_datasource.dart';
 import 'package:invoice_billing_app/core/entities/invoice.dart';
 import 'package:invoice_billing_app/core/error/failure.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 
 class DashboardRepository {
-  final InvoiceRemoteDatasource _invoiceRemoteDatasource;
-  final QuotationRemoteDatasource _quotationRemoteDatasource;
+  final InvoiceDatasource _invoiceRemoteDatasource;
+  final QuotationDatasource _quotationRemoteDatasource;
 
   DashboardRepository({
-    required InvoiceRemoteDatasource invoiceRemoteDatasource,
-    required QuotationRemoteDatasource quotationRemoteDatasource,
+    required InvoiceDatasource invoiceRemoteDatasource,
+    required QuotationDatasource quotationRemoteDatasource,
   })  : _invoiceRemoteDatasource = invoiceRemoteDatasource,
         _quotationRemoteDatasource = quotationRemoteDatasource;
 

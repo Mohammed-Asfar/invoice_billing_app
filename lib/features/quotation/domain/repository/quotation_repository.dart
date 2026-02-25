@@ -1,12 +1,12 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:invoice_billing_app/core/data/quotation_remote_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/quotation_datasource.dart';
 import 'package:invoice_billing_app/core/entities/quotation.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/failure.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 
 class QuotationRepository {
-  final QuotationRemoteDatasource quotationRemoteDatasource;
+  final QuotationDatasource quotationRemoteDatasource;
 
   QuotationRepository({required this.quotationRemoteDatasource});
 

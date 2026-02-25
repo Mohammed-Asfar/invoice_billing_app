@@ -1,15 +1,14 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:invoice_billing_app/core/data/invoice_remote_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/invoice_datasource.dart';
 import 'package:invoice_billing_app/core/entities/invoice.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/failure.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 
 class EditInvoiceRepository {
-  final InvoiceRemoteDatasource _invoiceRemoteDatasource;
+  final InvoiceDatasource _invoiceRemoteDatasource;
 
-  EditInvoiceRepository(
-      {required InvoiceRemoteDatasource invoiceRemoteDatasource})
+  EditInvoiceRepository({required InvoiceDatasource invoiceRemoteDatasource})
       : _invoiceRemoteDatasource = invoiceRemoteDatasource;
 
   Future<Either<Failure, String>> printInvoice(

@@ -1,20 +1,24 @@
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:invoice_billing_app/core/domain/datasources/quotation_datasource.dart';
 import 'package:invoice_billing_app/core/entities/quotation.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 import 'package:invoice_billing_app/core/models/quotation_model.dart';
 import 'package:invoice_billing_app/core/network_handle/check_connection.dart';
 import 'package:invoice_billing_app/core/utils/templates/quotation_template.dart';
-import 'package:mongo_dart/mongo_dart.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
-import 'dart:io';
 
-class QuotationRemoteDatasource {
-  final Db _mongoDb;
-  late DbCollection collection = _mongoDb.collection("quotations");
+class QuotationRemoteDatasource implements QuotationDatasource {
+  final FirebaseFirestore _firestore;
+  late CollectionReference<Map<String, dynamic>> collection =
+      _firestore.collection("quotations");
 
-  QuotationRemoteDatasource({required Db mongoDb}) : _mongoDb = mongoDb;
+  QuotationRemoteDatasource({required FirebaseFirestore firebaseFirestore})
+      : _firestore = firebaseFirestore;
 
+  @override
   Future<String> printQuotationDocument(
       {required Quotation quotation, required User user}) async {
     if (await checkConnection()) {
@@ -48,17 +52,16 @@ class QuotationRemoteDatasource {
     }
   }
 
+  @override
   Future<String> uploadQuotationData(
       {required Quotation quotation, required User user}) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      await collection.insert({
-        "_id": quotation.quotationNumber,
-        "quotation_${quotation.quotationNumber}":
-            QuotationModel.fromEntity(quotation).toMap()
-      });
+      await collection
+          .doc(quotation.quotationNumber)
+          .set(QuotationModel.fromEntity(quotation).toMap());
       await printQuotationDocument(quotation: quotation, user: user);
       return 'Quotation generated successfully';
     } catch (e) {
@@ -66,6 +69,7 @@ class QuotationRemoteDatasource {
     }
   }
 
+  @override
   Future<String> getNextQuotationNumber() async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
@@ -75,36 +79,35 @@ class QuotationRemoteDatasource {
       final year = now.year;
       final month = now.month.toString().padLeft(2, '0');
 
-      // Fetch all quotation documents
-      final latestQuotations = await collection.find().toList();
+      // Query quotations whose quotationNumber starts with the current year-month prefix
+      final prefix = "Q-$year-$month";
+      final snapshot = await collection
+          .where('quotationNumber', isGreaterThanOrEqualTo: prefix)
+          .where('quotationNumber', isLessThan: "${prefix}z")
+          .get();
 
-      // Extract quotation numbers in the format "quotation_Q-YYYY-MMNN"
-      List<int> quotationNumbers = latestQuotations
+      List<int> quotationNumbers = snapshot.docs
           .map((doc) {
-            final quotationKey = doc.keys.firstWhere(
-                (key) => key.startsWith("quotation_Q-$year-$month"),
-                orElse: () => "");
-            if (quotationKey.isNotEmpty) {
-              final match =
-                  RegExp(r"Q-(\d{4})-(\d{2})(\d{2})$").firstMatch(quotationKey);
+            final quotationNumber = doc.data()['quotationNumber'] as String?;
+            if (quotationNumber != null) {
+              final match = RegExp(r"Q-(\d{4})-(\d{2})(\d{2})$")
+                  .firstMatch(quotationNumber);
               if (match != null) {
-                return int.parse(match.group(3)!); // Extract last NN part
+                return int.parse(match.group(3)!);
               }
             }
             return 0;
           })
-          .where((num) => num > 0) // Remove invalid values
+          .where((n) => n > 0)
           .toList();
 
-      int nextNumber = 1; // Default if no quotations exist
+      int nextNumber = 1;
 
       if (quotationNumbers.isNotEmpty) {
-        // Sort numerically
         quotationNumbers.sort();
         nextNumber = quotationNumbers.last + 1;
       }
 
-      // Format as "Q-YYYY-MMNN" (e.g., Q-2025-0101, Q-2025-0110)
       final nextQuotationNumber =
           "Q-$year-$month${nextNumber.toString().padLeft(2, '0')}";
 
@@ -114,24 +117,18 @@ class QuotationRemoteDatasource {
     }
   }
 
+  @override
   Future<List<Quotation?>> getQuotations({String search = ""}) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      List<Map<String, dynamic>> queryResults;
+      final snapshot = await collection.get();
 
-      queryResults = await collection.find().toList();
-
-      // Map the query result to a list of Quotation objects
-      List<Quotation?> quotations = queryResults.map((doc) {
-        final quotationKey = doc.keys.firstWhere(
-            (key) => key.startsWith("quotation_"),
-            orElse: () => "");
-
-        if (quotationKey.isNotEmpty) {
-          final res = QuotationModel.fromEntity(
-              QuotationModel.fromMap(doc[quotationKey]));
+      List<Quotation?> quotations = snapshot.docs.map((doc) {
+        try {
+          final res =
+              QuotationModel.fromEntity(QuotationModel.fromMap(doc.data()));
 
           if (res.quotationNumber
                   .toLowerCase()
@@ -139,16 +136,11 @@ class QuotationRemoteDatasource {
               res.customerName.toLowerCase().contains(search.toLowerCase())) {
             return res;
           }
-        }
+        } catch (_) {}
         return null;
       }).toList();
 
-      quotations.removeWhere(
-        (element) {
-          return element == null;
-        },
-      );
-
+      quotations.removeWhere((element) => element == null);
       quotations
           .sort((a, b) => a!.quotationNumber.compareTo(b!.quotationNumber));
       quotations = quotations.reversed.toList();
@@ -159,32 +151,28 @@ class QuotationRemoteDatasource {
     }
   }
 
+  @override
   Future<String> deleteQuotation(Quotation quotation) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      await collection.deleteOne({"_id": quotation.quotationNumber},
-          collation: CollationOptions('fr', strength: 1));
-
+      await collection.doc(quotation.quotationNumber).delete();
       return 'Quotation ${quotation.quotationNumber} deleted successfully.';
     } catch (e) {
       throw ServerException('Error deleting quotation: $e');
     }
   }
 
+  @override
   Future<String> updateQuotation(Quotation quotation) async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
     }
     try {
-      await collection.replaceOne({
-        "_id": quotation.quotationNumber
-      }, {
-        "quotation_${quotation.quotationNumber}":
-            QuotationModel.fromEntity(quotation).toMap()
-      });
-
+      await collection
+          .doc(quotation.quotationNumber)
+          .set(QuotationModel.fromEntity(quotation).toMap());
       return 'Quotation ${quotation.quotationNumber} updated successfully.';
     } catch (e) {
       throw ServerException('Error updating quotation: $e');
@@ -192,6 +180,7 @@ class QuotationRemoteDatasource {
   }
 
   /// Get quotation statistics: total count and this month's count
+  @override
   Future<Map<String, dynamic>> getQuotationStats() async {
     if (await checkConnection()) {
       throw ServerException("No Internet Connection.");
@@ -201,32 +190,23 @@ class QuotationRemoteDatasource {
       final currentMonth = now.month;
       final currentYear = now.year;
 
-      final queryResults = await collection.find().toList();
+      final snapshot = await collection.get();
 
       int totalCount = 0;
       int thisMonthCount = 0;
 
-      for (var doc in queryResults) {
-        final quotationKey = doc.keys.firstWhere(
-            (key) => key.startsWith("quotation_"),
-            orElse: () => "");
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        totalCount++;
 
-        if (quotationKey.isNotEmpty) {
-          final quotationData = doc[quotationKey];
-          totalCount++;
-
-          // Check if this month's quotation
-          final issuedDate = quotationData['issuedDate'];
-          if (issuedDate != null) {
-            int timestamp = issuedDate is int
-                ? issuedDate
-                : (issuedDate as dynamic).toInt();
-            final quotationDate =
-                DateTime.fromMillisecondsSinceEpoch(timestamp);
-            if (quotationDate.month == currentMonth &&
-                quotationDate.year == currentYear) {
-              thisMonthCount++;
-            }
+        final issuedDate = data['issuedDate'];
+        if (issuedDate != null) {
+          int timestamp =
+              issuedDate is int ? issuedDate : (issuedDate as num).toInt();
+          final quotationDate = DateTime.fromMillisecondsSinceEpoch(timestamp);
+          if (quotationDate.month == currentMonth &&
+              quotationDate.year == currentYear) {
+            thisMonthCount++;
           }
         }
       }

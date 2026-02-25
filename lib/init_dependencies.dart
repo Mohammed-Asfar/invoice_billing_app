@@ -1,13 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/data/app_user_remote_datasource.dart';
 import 'package:invoice_billing_app/core/data/auth_remote_datasources.dart';
 import 'package:invoice_billing_app/core/data/invoice_remote_datasource.dart';
 import 'package:invoice_billing_app/core/data/quotation_remote_datasource.dart';
-import 'package:invoice_billing_app/core/secrets/secrets.dart';
+import 'package:invoice_billing_app/core/domain/datasources/app_user_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/auth_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/invoice_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/quotation_datasource.dart';
 import 'package:invoice_billing_app/core/utils/firebase_options.dart';
 import 'package:invoice_billing_app/features/auth/domain/auth_repository.dart';
 import 'package:invoice_billing_app/features/auth/presentation/bloc/auth_bloc.dart';
@@ -22,7 +26,6 @@ import 'package:invoice_billing_app/features/quotation/presentation/bloc/quotati
 import 'package:invoice_billing_app/features/quotation_edit/presentation/bloc/edit_quotation_bloc.dart';
 import 'package:invoice_billing_app/features/settings/domain/repository/settings_repository.dart';
 import 'package:invoice_billing_app/features/settings/presentation/bloc/settings_bloc.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongodart;
 
 final serviceLocator = GetIt.instance;
 
@@ -32,15 +35,7 @@ Future<bool> initDependencies() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    final mongodart.Db mongoDb = await mongodart.Db.create(
-      Secrets.mongoDbLink,
-    );
-    await mongoDb.open(secure: true);
-
-    // Core
-    serviceLocator.registerLazySingleton(
-      () => mongoDb,
-    );
+    // Core Firebase services
     serviceLocator.registerLazySingleton(
       () => FirebaseAuth.instance,
     );
@@ -48,22 +43,28 @@ Future<bool> initDependencies() async {
       () => FirebaseFirestore.instance,
     );
     serviceLocator.registerLazySingleton(
+      () => FirebaseStorage.instance,
+    );
+
+    // Data sources — registered as abstract types for DIP compliance
+    serviceLocator.registerLazySingleton<AppUserDatasource>(
       () => AppUserRemoteDatasource(firebaseFirestore: serviceLocator()),
     );
-    serviceLocator.registerLazySingleton<InvoiceRemoteDatasource>(
+    serviceLocator.registerLazySingleton<InvoiceDatasource>(
       () => InvoiceRemoteDatasource(
-        mongoDb: serviceLocator(),
+        firebaseFirestore: serviceLocator(),
       ),
     );
-    serviceLocator.registerLazySingleton<QuotationRemoteDatasource>(
+    serviceLocator.registerLazySingleton<QuotationDatasource>(
       () => QuotationRemoteDatasource(
-        mongoDb: serviceLocator(),
+        firebaseFirestore: serviceLocator(),
       ),
     );
-    serviceLocator.registerLazySingleton<AuthRemoteDatasources>(
+    serviceLocator.registerLazySingleton<AuthDatasource>(
       () => AuthRemoteDatasources(
         firebaseAuth: serviceLocator(),
         firebaseFirestore: serviceLocator(),
+        firebaseStorage: serviceLocator(),
       ),
     );
     serviceLocator.registerLazySingleton(
