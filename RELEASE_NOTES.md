@@ -1,5 +1,6 @@
-## What's New in v1.2.0
+## What's New in v1.3.0
 
-- Fixed update dialog now shows as a proper floating dialog
-- Window controls (minimize, maximize, close) are no longer hidden by the update dialog
-- Release notes are now scrollable for long content
+- Fixed update dialog UI - now shows as a proper floating dialog
+- Window controls (minimize, maximize, close) no longer hidden by update dialog
+- Release notes are scrollable for long content
+- Automated Firestore update on GitHub Release publish
