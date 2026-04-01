@@ -1,9 +1,9 @@
 name: Update Firestore on Release
 
+# Triggered when a GitHub Release is published (by the release script)
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -15,45 +15,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Extract version from pubspec.yaml
-        id: version
+      - name: Extract version and notes from release
+        id: info
         run: |
-          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          # Tag name is like "v1.2.0", strip the "v"
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Check if GitHub Release exists for this version
-        id: check
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh release view "v${{ steps.version.outputs.version }}" > /dev/null 2>&1; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Get release notes from GitHub Release
-        if: steps.check.outputs.exists == 'true'
-        id: notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          NOTES=$(gh release view "v${{ steps.version.outputs.version }}" --json body -q .body 2>/dev/null || echo "Bug fixes and improvements")
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "notes<<$EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
-
       - name: Update Firestore app_config/version
-        if: steps.check.outputs.exists == 'true'
         env:
           FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          APP_VERSION: ${{ steps.version.outputs.version }}
-          DOWNLOAD_URL: "https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.version }}/TBS_Invoice_Generator_Setup_${{ steps.version.outputs.version }}.exe"
-          RELEASE_NOTES: ${{ steps.notes.outputs.notes }}
+          APP_VERSION: ${{ steps.info.outputs.version }}
+          DOWNLOAD_URL: "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/TBS_Invoice_Generator_Setup_${{ steps.info.outputs.version }}.exe"
+          RELEASE_NOTES: ${{ github.event.release.body }}
         run: |
           npm install --silent google-auth-library
           node .github/scripts/update_firestore.js
