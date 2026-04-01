@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:invoice_billing_app/core/domain/datasources/quotation_datasource.dart';
 import 'package:invoice_billing_app/core/entities/quotation.dart';
@@ -6,9 +5,6 @@ import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 import 'package:invoice_billing_app/core/models/quotation_model.dart';
 import 'package:invoice_billing_app/core/network_handle/check_connection.dart';
-import 'package:invoice_billing_app/core/utils/templates/quotation_template.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart' as path;
 
 class QuotationRemoteDatasource implements QuotationDatasource {
   final FirebaseFirestore _firestore;
@@ -17,40 +13,6 @@ class QuotationRemoteDatasource implements QuotationDatasource {
 
   QuotationRemoteDatasource({required FirebaseFirestore firebaseFirestore})
       : _firestore = firebaseFirestore;
-
-  @override
-  Future<String> printQuotationDocument(
-      {required Quotation quotation, required User user}) async {
-    if (await checkConnection()) {
-      throw ServerException("No Internet Connection.");
-    }
-    try {
-      // Generate PDF
-      final pdfData =
-          await generateQuotationPDF(user: user, quotation: quotation);
-
-      // Save PDF to file
-      final directory = await getApplicationDocumentsDirectory();
-      final folderPath = path.join(directory.path, 'Quotation Documents');
-
-      final folder = Directory(folderPath);
-      if (!await folder.exists()) {
-        await folder.create(recursive: true);
-      }
-
-      final filePath =
-          path.join(folderPath, 'quotation_${quotation.quotationNumber}.pdf');
-      final file = File(filePath);
-      await file.writeAsBytes(pdfData);
-
-      // Open the file
-      await Process.run('explorer.exe', [filePath]);
-
-      return 'Quotation generated successfully';
-    } catch (e) {
-      throw ServerException('Error generating Quotation: $e');
-    }
-  }
 
   @override
   Future<String> uploadQuotationData(
@@ -62,10 +24,9 @@ class QuotationRemoteDatasource implements QuotationDatasource {
       await collection
           .doc(quotation.quotationNumber)
           .set(QuotationModel.fromEntity(quotation).toMap());
-      await printQuotationDocument(quotation: quotation, user: user);
-      return 'Quotation generated successfully';
+      return 'Quotation saved successfully';
     } catch (e) {
-      throw ServerException('Error generating Quotation: $e');
+      throw ServerException('Error saving Quotation: $e');
     }
   }
 

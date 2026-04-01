@@ -1,18 +1,25 @@
 import 'dart:io';
 import 'package:fpdart/fpdart.dart';
+import 'package:invoice_billing_app/core/domain/datasources/auth_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/user_profile_datasource.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/failure.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
-import 'package:invoice_billing_app/core/domain/datasources/auth_datasource.dart';
 
 class AuthRepository {
-  final AuthDatasource authRemoteDatasources;
-  AuthRepository({required this.authRemoteDatasources});
+  final AuthDatasource _authDatasource;
+  final UserProfileDatasource _userProfileDatasource;
+
+  AuthRepository({
+    required AuthDatasource authDatasource,
+    required UserProfileDatasource userProfileDatasource,
+  })  : _authDatasource = authDatasource,
+        _userProfileDatasource = userProfileDatasource;
 
   Future<Either<Failure, User>> signWithEmailPassword(
       {required String email, required String password}) async {
     try {
-      final user = (await authRemoteDatasources.signWithEmailPassword(
+      final user = (await _authDatasource.signWithEmailPassword(
           email: email, password: password));
 
       return right(
@@ -40,7 +47,7 @@ class AuthRepository {
   Future<Either<Failure, String>> forgotPassword(
       {required String email}) async {
     try {
-      final res = await authRemoteDatasources.forgotPassword(email: email);
+      final res = await _authDatasource.forgotPassword(email: email);
       return right(res);
     } on ServerException catch (e) {
       return left(Failure(e.message));
@@ -63,7 +70,7 @@ class AuthRepository {
     required String accountIFSC,
   }) async {
     try {
-      final User user = await authRemoteDatasources.userDetailsUpdate(
+      final User user = await _userProfileDatasource.userDetailsUpdate(
         uid: uid,
         email: email,
         mobileNumber: mobileNumber,

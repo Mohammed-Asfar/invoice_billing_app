@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/common/widgets/basic_button.dart';
 import 'package:invoice_billing_app/core/common/widgets/basic_text_field.dart';
-import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/entities/quotation_controller.dart';
 import 'package:invoice_billing_app/core/theme/app_colors.dart';
 import 'package:invoice_billing_app/core/theme/app_theme.dart';
@@ -10,6 +9,7 @@ import 'package:invoice_billing_app/core/utils/date_format.dart';
 import 'package:invoice_billing_app/core/common/widgets/date_field.dart';
 import 'package:invoice_billing_app/core/common/widgets/product_field.dart';
 import 'package:invoice_billing_app/core/common/widgets/quotation_product_tile.dart';
+import 'package:invoice_billing_app/features/quotation/presentation/bloc/quotation_bloc.dart';
 
 class CreateQuotationPage extends StatefulWidget {
   const CreateQuotationPage({super.key});
@@ -23,7 +23,7 @@ class _CreateQuotationPageState extends State<CreateQuotationPage> {
   bool enableShipping = false;
 
   _initiateQuotationController() {
-    _quotationController = context.read<AppUserCubit>().quotationController;
+    _quotationController = context.read<QuotationBloc>().quotationController;
   }
 
   @override

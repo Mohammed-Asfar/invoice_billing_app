@@ -11,6 +11,7 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+.env
 
 # IntelliJ related
 *.iml
@@ -43,3 +44,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment secrets & service account keys
+**/serviceAccountKey.json
+**/billing-app-db-firebase-adminsdk*.json
+
+# Firebase platform service files
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Migration scripts
+mongo-to-firebase/

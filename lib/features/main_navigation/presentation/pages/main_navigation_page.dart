@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/theme/app_colors.dart';
 import 'package:invoice_billing_app/core/theme/app_theme.dart';
+import 'package:invoice_billing_app/core/domain/services/app_update_service.dart';
 import 'package:invoice_billing_app/core/utils/show_app_dialog.dart';
+import 'package:invoice_billing_app/core/utils/show_update_dialog.dart';
+import 'package:invoice_billing_app/init_dependencies.dart';
 import 'package:invoice_billing_app/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:invoice_billing_app/features/invoice/presentation/pages/invoice_page.dart';
 import 'package:invoice_billing_app/features/main_navigation/presentation/widgets/navigator_list_tile.dart';
@@ -38,6 +41,20 @@ class _MainNavigationPageState extends State<MainNavigationPage> {
 
   bool ishidden = false;
   bool isAnimationOver = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    final updateService = serviceLocator<AppUpdateService>();
+    final versionInfo = await updateService.checkForUpdate();
+    if (versionInfo != null && mounted) {
+      showUpdateDialog(context: context, versionInfo: versionInfo);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

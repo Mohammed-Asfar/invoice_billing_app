@@ -1,19 +1,25 @@
 import 'dart:io';
 import 'package:fpdart/fpdart.dart';
-import 'package:invoice_billing_app/core/domain/datasources/auth_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/image_storage_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/user_profile_datasource.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/failure.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 
 class SettingsRepository {
-  final AuthDatasource _authRemoteDatasources;
-  SettingsRepository({required AuthDatasource authRemoteDatasources})
-      : _authRemoteDatasources = authRemoteDatasources;
+  final UserProfileDatasource _userProfileDatasource;
+  final ImageStorageDatasource _imageStorageDatasource;
+
+  SettingsRepository({
+    required UserProfileDatasource userProfileDatasource,
+    required ImageStorageDatasource imageStorageDatasource,
+  })  : _userProfileDatasource = userProfileDatasource,
+        _imageStorageDatasource = imageStorageDatasource;
 
   Future<Either<Failure, User>> userDetailsUpdate(
       {required User user, required File imageFile}) async {
     try {
-      final User updatedUser = await _authRemoteDatasources.userDetailsUpdate(
+      final User updatedUser = await _userProfileDatasource.userDetailsUpdate(
         uid: user.uid,
         email: user.email,
         mobileNumber: user.mobileNumber,
@@ -37,7 +43,7 @@ class SettingsRepository {
 
   Future<Either<Failure, File>> fetchNetworkImage(String url) async {
     try {
-      final res = await _authRemoteDatasources.fetchNetworkImage(url);
+      final res = await _imageStorageDatasource.fetchNetworkImage(url);
       return right(res);
     } on ServerException catch (e) {
       return left(Failure(e.message));

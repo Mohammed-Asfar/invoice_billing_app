@@ -5,7 +5,6 @@ import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/error/server_exception.dart';
 import 'package:invoice_billing_app/core/models/invoice_model.dart';
 import 'package:invoice_billing_app/core/network_handle/check_connection.dart';
-import 'package:invoice_billing_app/core/utils/print_invoice.dart';
 
 class InvoiceRemoteDatasource implements InvoiceDatasource {
   final FirebaseFirestore _firestore;
@@ -15,19 +14,8 @@ class InvoiceRemoteDatasource implements InvoiceDatasource {
   InvoiceRemoteDatasource({required FirebaseFirestore firebaseFirestore})
       : _firestore = firebaseFirestore;
 
-  @override
-  Future<String> printInvoiceDocument(
-      {required Invoice invoice, required User user}) async {
-    if (await checkConnection()) {
-      throw ServerException("No Internet Connection.");
-    }
-    try {
-      await printInvoice(invoice: invoice, user: user);
-      return 'Invoice generated successfully';
-    } catch (e) {
-      throw ServerException('Error generating Invoice');
-    }
-  }
+  /// Firestore doc IDs cannot contain '/'. Replace '/' with '_' for storage.
+  String _docId(String invoiceNumber) => invoiceNumber.replaceAll('/', '_');
 
   @override
   Future<String> uploadInvoiceData(
@@ -37,13 +25,20 @@ class InvoiceRemoteDatasource implements InvoiceDatasource {
     }
     try {
       await collection
-          .doc(invoice.invoiceNumber)
+          .doc(_docId(invoice.invoiceNumber))
           .set(InvoiceModel.fromEntity(invoice).toMap());
-      await printInvoiceDocument(invoice: invoice, user: user);
-      return 'Invoice generated successfully';
+      return 'Invoice saved successfully';
     } catch (e) {
-      throw ServerException('Error generating Invoice');
+      throw ServerException('Error saving Invoice');
     }
+  }
+
+  /// Returns the financial year prefix like "25-26" or "26-27".
+  /// FY runs April to March: Apr 2026 – Mar 2027 = "26-27".
+  String _financialYearPrefix(DateTime date) {
+    final startYear = date.month >= 4 ? date.year : date.year - 1;
+    final endYear = startYear + 1;
+    return '${startYear % 100}-${endYear % 100}';
   }
 
   @override
@@ -53,24 +48,23 @@ class InvoiceRemoteDatasource implements InvoiceDatasource {
     }
     try {
       final now = DateTime.now();
-      final year = now.year;
-      final month = now.month.toString().padLeft(2, '0');
+      final fyPrefix = _financialYearPrefix(now);
 
-      // Query invoices whose invoiceNumber starts with the current year-month prefix
-      final prefix = "$year-$month";
+      // Query invoices with the current financial year prefix (e.g. "26-27/")
       final snapshot = await collection
-          .where('invoiceNumber', isGreaterThanOrEqualTo: prefix)
-          .where('invoiceNumber', isLessThan: "${prefix}z")
+          .where('invoiceNumber', isGreaterThanOrEqualTo: '$fyPrefix/')
+          .where('invoiceNumber', isLessThan: '$fyPrefix/z')
           .get();
 
       List<int> invoiceNumbers = snapshot.docs
           .map((doc) {
             final invoiceNumber = doc.data()['invoiceNumber'] as String?;
             if (invoiceNumber != null) {
+              // Match "YY-YY/NNN" format
               final match =
-                  RegExp(r"(\d{4})-(\d{2})(\d{2})$").firstMatch(invoiceNumber);
+                  RegExp(r"\d{2}-\d{2}/(\d+)$").firstMatch(invoiceNumber);
               if (match != null) {
-                return int.parse(match.group(3)!);
+                return int.parse(match.group(1)!);
               }
             }
             return 0;
@@ -85,8 +79,9 @@ class InvoiceRemoteDatasource implements InvoiceDatasource {
         nextNumber = invoiceNumbers.last + 1;
       }
 
+      // Format: "26-27/001"
       final nextInvoiceNumber =
-          "$year-$month${nextNumber.toString().padLeft(2, '0')}";
+          '$fyPrefix/${nextNumber.toString().padLeft(3, '0')}';
 
       return nextInvoiceNumber;
     } catch (e) {
@@ -128,7 +123,7 @@ class InvoiceRemoteDatasource implements InvoiceDatasource {
       throw ServerException("No Internet Connection.");
     }
     try {
-      await collection.doc(invoice.invoiceNumber).delete();
+      await collection.doc(_docId(invoice.invoiceNumber)).delete();
       return 'Invoice ${invoice.invoiceNumber} deleted successfully.';
     } catch (e) {
       throw ServerException('Error deleting invoice: $e');
@@ -142,7 +137,7 @@ class InvoiceRemoteDatasource implements InvoiceDatasource {
     }
     try {
       await collection
-          .doc(invoice.invoiceNumber)
+          .doc(_docId(invoice.invoiceNumber))
           .set(InvoiceModel.fromEntity(invoice).toMap());
       return 'Invoice ${invoice.invoiceNumber} updated successfully.';
     } catch (e) {

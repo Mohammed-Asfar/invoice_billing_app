@@ -1,20 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/entities/quotation.dart';
+import 'package:invoice_billing_app/core/entities/quotation_controller.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/features/quotation/domain/repository/quotation_repository.dart';
+import 'package:invoice_billing_app/features/quotation/domain/usecase/create_quotation_usecase.dart';
 
 part 'quotation_event.dart';
 part 'quotation_state.dart';
 
 class QuotationBloc extends Bloc<QuotationEvent, QuotationState> {
   final QuotationRepository _quotationRepository;
+  final CreateQuotationUseCase _createQuotationUseCase;
   final AppUserCubit _appUserCubit;
+  QuotationController? quotationController;
 
   QuotationBloc({
     required QuotationRepository quotationRepository,
+    required CreateQuotationUseCase createQuotationUseCase,
     required AppUserCubit appUserCubit,
   })  : _quotationRepository = quotationRepository,
+        _createQuotationUseCase = createQuotationUseCase,
         _appUserCubit = appUserCubit,
         super(QuotationInitial()) {
     on<CreateQuotation>(_onCreateQuotation);
@@ -29,9 +35,11 @@ class QuotationBloc extends Bloc<QuotationEvent, QuotationState> {
       CreateQuotation event, Emitter<QuotationState> emit) async {
     emit(QuotationLoading());
 
-    final result = await _quotationRepository.uploadQuotation(
-      quotation: event.quotation,
-      user: _appUserCubit.user,
+    final result = await _createQuotationUseCase(
+      CreateQuotationParams(
+        quotation: event.quotation,
+        user: _appUserCubit.user,
+      ),
     );
 
     result.fold(

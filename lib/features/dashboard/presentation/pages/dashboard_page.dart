@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/common/widgets/basic_text_field.dart';
-import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/theme/app_colors.dart';
 import 'package:invoice_billing_app/core/theme/app_theme.dart';
 import 'package:invoice_billing_app/core/utils/loader.dart';
@@ -27,7 +26,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    searchBarController = context.read<AppUserCubit>().searchBarController;
+    searchBarController = TextEditingController();
     searchBarController.addListener(_onSearchChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -43,6 +42,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void dispose() {
     searchBarController.removeListener(_onSearchChanged);
+    searchBarController.dispose();
     super.dispose();
   }
 

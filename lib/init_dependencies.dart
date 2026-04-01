@@ -6,22 +6,34 @@ import 'package:get_it/get_it.dart';
 import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/data/app_user_remote_datasource.dart';
 import 'package:invoice_billing_app/core/data/auth_remote_datasources.dart';
+import 'package:invoice_billing_app/core/data/cloudinary_image_datasource.dart';
 import 'package:invoice_billing_app/core/data/invoice_remote_datasource.dart';
 import 'package:invoice_billing_app/core/data/quotation_remote_datasource.dart';
+import 'package:invoice_billing_app/core/data/user_profile_remote_datasource.dart';
 import 'package:invoice_billing_app/core/domain/datasources/app_user_datasource.dart';
 import 'package:invoice_billing_app/core/domain/datasources/auth_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/image_storage_datasource.dart';
 import 'package:invoice_billing_app/core/domain/datasources/invoice_datasource.dart';
 import 'package:invoice_billing_app/core/domain/datasources/quotation_datasource.dart';
+import 'package:invoice_billing_app/core/domain/datasources/user_profile_datasource.dart';
+import 'package:invoice_billing_app/core/domain/services/app_update_service.dart';
+import 'package:invoice_billing_app/core/domain/services/invoice_print_service.dart';
+import 'package:invoice_billing_app/core/domain/services/quotation_print_service.dart';
+import 'package:invoice_billing_app/core/services/app_update_service_impl.dart';
+import 'package:invoice_billing_app/core/services/invoice_print_service_impl.dart';
+import 'package:invoice_billing_app/core/services/quotation_print_service_impl.dart';
 import 'package:invoice_billing_app/core/utils/firebase_options.dart';
 import 'package:invoice_billing_app/features/auth/domain/auth_repository.dart';
 import 'package:invoice_billing_app/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:invoice_billing_app/features/dashboard/domain/repository/dashboard_repository.dart';
 import 'package:invoice_billing_app/features/dashboard/presentation/bloc/dashboard_bloc/dashboard_bloc.dart';
 import 'package:invoice_billing_app/features/invoice/domain/repository/invoice_repository.dart';
+import 'package:invoice_billing_app/features/invoice/domain/usecase/create_invoice_usecase.dart';
 import 'package:invoice_billing_app/features/invoice/presentation/bloc/create_invoice_bloc.dart';
 import 'package:invoice_billing_app/features/invoice_edit/domain/repository/edit_invoice_repository.dart';
 import 'package:invoice_billing_app/features/invoice_edit/presentation/bloc/edit_invoice_bloc.dart';
 import 'package:invoice_billing_app/features/quotation/domain/repository/quotation_repository.dart';
+import 'package:invoice_billing_app/features/quotation/domain/usecase/create_quotation_usecase.dart';
 import 'package:invoice_billing_app/features/quotation/presentation/bloc/quotation_bloc.dart';
 import 'package:invoice_billing_app/features/quotation_edit/presentation/bloc/edit_quotation_bloc.dart';
 import 'package:invoice_billing_app/features/settings/domain/repository/settings_repository.dart';
@@ -61,11 +73,29 @@ Future<bool> initDependencies() async {
       ),
     );
     serviceLocator.registerLazySingleton<AuthDatasource>(
-      () => AuthRemoteDatasources(
+      () => AuthRemoteDatasource(
         firebaseAuth: serviceLocator(),
-        firebaseFirestore: serviceLocator(),
-        firebaseStorage: serviceLocator(),
       ),
+    );
+    serviceLocator.registerLazySingleton<ImageStorageDatasource>(
+      () => CloudinaryImageDatasource(),
+    );
+    serviceLocator.registerLazySingleton<UserProfileDatasource>(
+      () => UserProfileRemoteDatasource(
+        firebaseFirestore: serviceLocator(),
+        imageStorageDatasource: serviceLocator(),
+      ),
+    );
+
+    // Services — registered as abstract types for DIP compliance
+    serviceLocator.registerLazySingleton<InvoicePrintService>(
+      () => InvoicePrintServiceImpl(),
+    );
+    serviceLocator.registerLazySingleton<QuotationPrintService>(
+      () => QuotationPrintServiceImpl(),
+    );
+    serviceLocator.registerLazySingleton<AppUpdateService>(
+      () => AppUpdateServiceImpl(firebaseFirestore: serviceLocator()),
     );
     serviceLocator.registerLazySingleton(
       () => AppUserCubit(
@@ -87,7 +117,10 @@ Future<bool> initDependencies() async {
 
 void _initAuth() {
   serviceLocator.registerFactory<AuthRepository>(
-    () => AuthRepository(authRemoteDatasources: serviceLocator()),
+    () => AuthRepository(
+      authDatasource: serviceLocator(),
+      userProfileDatasource: serviceLocator(),
+    ),
   );
 
   serviceLocator.registerLazySingleton(
@@ -97,12 +130,21 @@ void _initAuth() {
 
 void _initCreateInvoice() {
   serviceLocator.registerFactory<CreateInvoiceRepository>(
-    () => CreateInvoiceRepository(invoiceRemoteDatasource: serviceLocator()),
+    () => CreateInvoiceRepository(
+      invoiceRemoteDatasource: serviceLocator(),
+    ),
+  );
+
+  serviceLocator.registerFactory<CreateInvoiceUseCase>(
+    () => CreateInvoiceUseCase(
+      invoiceDatasource: serviceLocator(),
+      invoicePrintService: serviceLocator(),
+    ),
   );
 
   serviceLocator.registerLazySingleton(
     () => CreateInvoiceBloc(
-      appUserCubit: serviceLocator(),
+      createInvoiceUseCase: serviceLocator(),
       createInvoiceRepository: serviceLocator(),
     ),
   );
@@ -123,7 +165,10 @@ void _initDashboard() {
 
 void _initEditInvoice() {
   serviceLocator.registerFactory<EditInvoiceRepository>(
-    () => EditInvoiceRepository(invoiceRemoteDatasource: serviceLocator()),
+    () => EditInvoiceRepository(
+      invoiceRemoteDatasource: serviceLocator(),
+      invoicePrintService: serviceLocator(),
+    ),
   );
 
   serviceLocator.registerLazySingleton(
@@ -133,7 +178,10 @@ void _initEditInvoice() {
 
 void _initSettings() {
   serviceLocator.registerFactory<SettingsRepository>(
-    () => SettingsRepository(authRemoteDatasources: serviceLocator()),
+    () => SettingsRepository(
+      userProfileDatasource: serviceLocator(),
+      imageStorageDatasource: serviceLocator(),
+    ),
   );
 
   serviceLocator.registerLazySingleton(
@@ -143,12 +191,23 @@ void _initSettings() {
 
 void _initQuotation() {
   serviceLocator.registerFactory<QuotationRepository>(
-    () => QuotationRepository(quotationRemoteDatasource: serviceLocator()),
+    () => QuotationRepository(
+      quotationRemoteDatasource: serviceLocator(),
+      quotationPrintService: serviceLocator(),
+    ),
+  );
+
+  serviceLocator.registerFactory<CreateQuotationUseCase>(
+    () => CreateQuotationUseCase(
+      quotationDatasource: serviceLocator(),
+      quotationPrintService: serviceLocator(),
+    ),
   );
 
   serviceLocator.registerLazySingleton(
     () => QuotationBloc(
       quotationRepository: serviceLocator(),
+      createQuotationUseCase: serviceLocator(),
       appUserCubit: serviceLocator(),
     ),
   );

@@ -3,11 +3,7 @@ import 'package:invoice_billing_app/core/entities/user.dart';
 
 /// Abstraction for quotation data operations.
 abstract class QuotationDatasource {
-  /// Generate and print a quotation PDF.
-  Future<String> printQuotationDocument(
-      {required Quotation quotation, required User user});
-
-  /// Upload quotation data to the database and trigger printing.
+  /// Upload quotation data to the database.
   Future<String> uploadQuotationData(
       {required Quotation quotation, required User user});
 

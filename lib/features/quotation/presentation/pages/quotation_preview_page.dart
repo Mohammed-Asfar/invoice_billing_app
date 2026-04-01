@@ -8,6 +8,7 @@ import 'package:invoice_billing_app/core/theme/app_theme.dart';
 import 'package:invoice_billing_app/core/utils/date_format.dart';
 import 'package:invoice_billing_app/core/common/widgets/invoice_detail_header.dart';
 import 'package:invoice_billing_app/core/common/widgets/invoice_detail_tile.dart';
+import 'package:invoice_billing_app/features/quotation/presentation/bloc/quotation_bloc.dart';
 
 class QuotationPreviewPage extends StatefulWidget {
   const QuotationPreviewPage({super.key});
@@ -21,7 +22,7 @@ class _QuotationPreviewPageState extends State<QuotationPreviewPage> {
 
   @override
   void initState() {
-    quotationController = context.read<AppUserCubit>().quotationController!;
+    quotationController = context.read<QuotationBloc>().quotationController!;
     super.initState();
   }
 

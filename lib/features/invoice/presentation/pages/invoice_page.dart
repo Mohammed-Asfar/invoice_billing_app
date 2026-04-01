@@ -37,15 +37,15 @@ class _InvoicePageState extends State<InvoicePage> {
   }
 
   _initiateInvoiceController() {
-    if (context.read<AppUserCubit>().invoiceController == null) {
-      context.read<AppUserCubit>().invoiceController = InvoiceController();
+    if (context.read<CreateInvoiceBloc>().invoiceController == null) {
+      context.read<CreateInvoiceBloc>().invoiceController = InvoiceController();
       context
-          .read<AppUserCubit>()
+          .read<CreateInvoiceBloc>()
           .invoiceController!
           .customerStateNameController
           .text = "TAMIL NADU";
       context
-          .read<AppUserCubit>()
+          .read<CreateInvoiceBloc>()
           .invoiceController!
           .customerCodeController
           .text = "33";
@@ -119,8 +119,9 @@ class _InvoicePageState extends State<InvoicePage> {
                             _movePage(pageInt: 1);
                           } else {
                             _movePage(pageInt: 0);
-                            final invoiceController =
-                                context.read<AppUserCubit>().invoiceController;
+                            final invoiceController = context
+                                .read<CreateInvoiceBloc>()
+                                .invoiceController;
                             context.read<CreateInvoiceBloc>().add(CreateInvoice(
                                 invoice: invoiceController!.toInvoiceModel(),
                                 user: context.read<AppUserCubit>().user));

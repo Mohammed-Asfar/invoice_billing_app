@@ -1,0 +1,83 @@
+name: Update Firestore on Release
+
+# Triggered when the release script pushes to main
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  update-firestore:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from pubspec.yaml
+        id: version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Get release notes from GitHub Release
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES=$(gh release view "v${{ steps.version.outputs.version }}" --json body -q .body 2>/dev/null || echo "Bug fixes and improvements")
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "notes<<$EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+      - name: Check if GitHub Release exists for this version
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.version.outputs.version }}" > /dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update Firestore app_config/version
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/TBS_Invoice_Generator_Setup_${VERSION}.exe"
+          RELEASE_NOTES=$(echo '${{ steps.notes.outputs.notes }}' | head -c 1000)
+
+          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > sa.json
+
+          npm install google-auth-library
+          ACCESS_TOKEN=$(node -e "
+            const {GoogleAuth} = require('google-auth-library');
+            const sa = require('./sa.json');
+            const auth = new GoogleAuth({
+              credentials: sa,
+              scopes: ['https://www.googleapis.com/auth/datastore']
+            });
+            auth.getClient().then(c => c.getAccessToken()).then(t => process.stdout.write(t.token));
+          ")
+
+          curl -s -X PATCH \
+            "https://firestore.googleapis.com/v1/projects/billing-app-db/databases/(default)/documents/app_config/version?updateMask.fieldPaths=latestVersion&updateMask.fieldPaths=downloadUrl&updateMask.fieldPaths=releaseNotes&updateMask.fieldPaths=forceUpdate" \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"fields\": {
+                \"latestVersion\": {\"stringValue\": \"$VERSION\"},
+                \"downloadUrl\": {\"stringValue\": \"$DOWNLOAD_URL\"},
+                \"releaseNotes\": {\"stringValue\": \"$RELEASE_NOTES\"},
+                \"forceUpdate\": {\"booleanValue\": false}
+              }
+            }"
+
+          echo "Updated Firestore: version=$VERSION"

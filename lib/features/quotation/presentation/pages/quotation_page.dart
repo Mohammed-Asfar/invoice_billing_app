@@ -54,25 +54,18 @@ class _QuotationPageState extends State<QuotationPage> {
   }
 
   _initiateQuotationController() {
+    final bloc = context.read<QuotationBloc>();
     if (isEditMode) {
       // Edit mode: load existing quotation into controller
-      context.read<AppUserCubit>().quotationController =
+      bloc.quotationController =
           QuotationController.fromQuotation(widget.quotation!);
     } else {
       // Create mode: initialize new controller if needed
-      if (context.read<AppUserCubit>().quotationController == null) {
-        context.read<AppUserCubit>().quotationController =
-            QuotationController();
-        context
-            .read<AppUserCubit>()
-            .quotationController!
-            .customerStateNameController
-            .text = "TAMIL NADU";
-        context
-            .read<AppUserCubit>()
-            .quotationController!
-            .customerCodeController
-            .text = "33";
+      if (bloc.quotationController == null) {
+        bloc.quotationController = QuotationController();
+        bloc.quotationController!.customerStateNameController.text =
+            "TAMIL NADU";
+        bloc.quotationController!.customerCodeController.text = "33";
       }
     }
   }
@@ -88,8 +81,7 @@ class _QuotationPageState extends State<QuotationPage> {
     final bloc = context.read<QuotationBloc>();
     if (bloc.isClosed) return;
 
-    final quotationController =
-        context.read<AppUserCubit>().quotationController!;
+    final quotationController = bloc.quotationController!;
     final quotationModel = quotationController.toQuotationModel();
 
     if (isEditMode) {
@@ -112,8 +104,7 @@ class _QuotationPageState extends State<QuotationPage> {
         final bloc = context.read<QuotationBloc>();
         if (bloc.isClosed) return;
 
-        final quotationController =
-            context.read<AppUserCubit>().quotationController!;
+        final quotationController = bloc.quotationController!;
         bloc.add(DeleteQuotation(quotationController.toQuotationModel()));
       },
     );
@@ -124,8 +115,7 @@ class _QuotationPageState extends State<QuotationPage> {
     final bloc = context.read<QuotationBloc>();
     if (bloc.isClosed) return;
 
-    final quotationController =
-        context.read<AppUserCubit>().quotationController!;
+    final quotationController = bloc.quotationController!;
     final user = context.read<AppUserCubit>().user;
     bloc.add(
       PrintQuotation(
@@ -136,17 +126,10 @@ class _QuotationPageState extends State<QuotationPage> {
   }
 
   void _resetQuotationController() {
-    context.read<AppUserCubit>().quotationController = QuotationController();
-    context
-        .read<AppUserCubit>()
-        .quotationController!
-        .customerStateNameController
-        .text = "TAMIL NADU";
-    context
-        .read<AppUserCubit>()
-        .quotationController!
-        .customerCodeController
-        .text = "33";
+    final bloc = context.read<QuotationBloc>();
+    bloc.quotationController = QuotationController();
+    bloc.quotationController!.customerStateNameController.text = "TAMIL NADU";
+    bloc.quotationController!.customerCodeController.text = "33";
     _movePage(pageInt: 0);
     setState(() {});
   }

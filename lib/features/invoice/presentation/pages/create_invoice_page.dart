@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/common/widgets/basic_button.dart';
 import 'package:invoice_billing_app/core/common/widgets/basic_text_field.dart';
-import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/entities/invoice_controller.dart';
 import 'package:invoice_billing_app/core/theme/app_colors.dart';
 import 'package:invoice_billing_app/core/theme/app_theme.dart';
@@ -10,6 +9,7 @@ import 'package:invoice_billing_app/core/utils/date_format.dart';
 import 'package:invoice_billing_app/core/common/widgets/date_field.dart';
 import 'package:invoice_billing_app/core/common/widgets/product_field.dart';
 import 'package:invoice_billing_app/core/common/widgets/product_tile.dart';
+import 'package:invoice_billing_app/features/invoice/presentation/bloc/create_invoice_bloc.dart';
 
 class CreateInvoicePage extends StatefulWidget {
   const CreateInvoicePage({super.key});
@@ -23,7 +23,7 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
   bool enableShipping = false;
 
   _initiateInvoiceController() {
-    _invoiceController = context.read<AppUserCubit>().invoiceController;
+    _invoiceController = context.read<CreateInvoiceBloc>().invoiceController;
   }
 
   @override

@@ -3,11 +3,7 @@ import 'package:invoice_billing_app/core/entities/user.dart';
 
 /// Abstraction for invoice data operations.
 abstract class InvoiceDatasource {
-  /// Generate and print an invoice PDF.
-  Future<String> printInvoiceDocument(
-      {required Invoice invoice, required User user});
-
-  /// Upload invoice data to the database and trigger printing.
+  /// Upload invoice data to the database.
   Future<String> uploadInvoiceData(
       {required Invoice invoice, required User user});
 

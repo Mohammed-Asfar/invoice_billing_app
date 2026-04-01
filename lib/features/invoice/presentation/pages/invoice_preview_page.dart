@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:invoice_billing_app/core/cubit/app_user/app_user_cubit.dart';
 import 'package:invoice_billing_app/core/entities/invoice_controller.dart';
+import 'package:invoice_billing_app/features/invoice/presentation/bloc/create_invoice_bloc.dart';
 import 'package:invoice_billing_app/core/entities/user.dart';
 import 'package:invoice_billing_app/core/theme/app_colors.dart';
 import 'package:invoice_billing_app/core/theme/app_theme.dart';
@@ -21,7 +22,7 @@ class _InvoicePreviewPageState extends State<InvoicePreviewPage> {
 
   @override
   void initState() {
-    invoiceController = context.read<AppUserCubit>().invoiceController!;
+    invoiceController = context.read<CreateInvoiceBloc>().invoiceController!;
     super.initState();
   }
 

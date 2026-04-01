@@ -1,6 +1,10 @@
-// No secrets needed — Firebase configuration is handled by firebase_options.dart
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class Secrets {
-  // This class is kept for backward compatibility but all secrets
-  // have been removed as part of the Firebase migration.
-  // MongoDB and Imgur are no longer used.
+  static String get cloudinaryCloudName =>
+      dotenv.env['CLOUDINARY_CLOUD_NAME'] ?? '';
+  static String get cloudinaryApiKey =>
+      dotenv.env['CLOUDINARY_API_KEY'] ?? '';
+  static String get cloudinaryApiSecret =>
+      dotenv.env['CLOUDINARY_API_SECRET'] ?? '';
 }
