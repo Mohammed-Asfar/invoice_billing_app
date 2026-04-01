@@ -5,7 +5,7 @@
 ; Then compile this .iss with Inno Setup to produce the installer.
 
 #define MyAppName      "TBS Invoice Generator"
-#define MyAppVersion   "1.1.0"
+#define MyAppVersion   "1.2.0"
 #define MyAppPublisher "Asfar"
 #define MyAppExeName   "invoice_billing_app.exe"
 
