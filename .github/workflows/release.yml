@@ -25,17 +25,6 @@ jobs:
           VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Get release notes from GitHub Release
-        id: notes
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          NOTES=$(gh release view "v${{ steps.version.outputs.version }}" --json body -q .body 2>/dev/null || echo "Bug fixes and improvements")
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "notes<<$EOF" >> $GITHUB_OUTPUT
-          echo "$NOTES" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
-
       - name: Check if GitHub Release exists for this version
         id: check
         env:
@@ -47,25 +36,46 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Get release notes from GitHub Release
+        if: steps.check.outputs.exists == 'true'
+        id: notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          NOTES=$(gh release view "v${{ steps.version.outputs.version }}" --json body -q .body 2>/dev/null || echo "Bug fixes and improvements")
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "notes<<$EOF" >> $GITHUB_OUTPUT
+          echo "$NOTES" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
       - name: Update Firestore app_config/version
         if: steps.check.outputs.exists == 'true'
+        env:
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/TBS_Invoice_Generator_Setup_${VERSION}.exe"
-          RELEASE_NOTES=$(echo '${{ steps.notes.outputs.notes }}' | head -c 1000)
 
-          echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > sa.json
+          # Write service account key from env var (avoids shell escaping issues)
+          printenv FIREBASE_SA > sa.json
 
-          npm install google-auth-library
-          ACCESS_TOKEN=$(node -e "
-            const {GoogleAuth} = require('google-auth-library');
-            const sa = require('./sa.json');
-            const auth = new GoogleAuth({
-              credentials: sa,
-              scopes: ['https://www.googleapis.com/auth/datastore']
-            });
-            auth.getClient().then(c => c.getAccessToken()).then(t => process.stdout.write(t.token));
-          ")
+          npm install --silent google-auth-library
+
+          # Write the Node script to a file to avoid bash escaping issues
+          cat > get_token.js << 'SCRIPT'
+          const {GoogleAuth} = require('google-auth-library');
+          const sa = require('./sa.json');
+          const auth = new GoogleAuth({
+            credentials: sa,
+            scopes: ['https://www.googleapis.com/auth/datastore']
+          });
+          auth.getClient().then(c => c.getAccessToken()).then(t => process.stdout.write(t.token));
+          SCRIPT
+
+          ACCESS_TOKEN=$(node get_token.js)
+
+          # Escape release notes for JSON
+          RELEASE_NOTES=$(echo '${{ steps.notes.outputs.notes }}' | head -c 1000 | python3 -c 'import sys,json; print(json.dumps(sys.stdin.read())[1:-1])')
 
           curl -s -X PATCH \
             "https://firestore.googleapis.com/v1/projects/billing-app-db/databases/(default)/documents/app_config/version?updateMask.fieldPaths=latestVersion&updateMask.fieldPaths=downloadUrl&updateMask.fieldPaths=releaseNotes&updateMask.fieldPaths=forceUpdate" \
@@ -80,4 +90,5 @@ jobs:
               }
             }"
 
+          echo ""
           echo "Updated Firestore: version=$VERSION"
