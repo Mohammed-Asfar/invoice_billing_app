@@ -124,7 +124,7 @@ echo ""
 # ── Step 4: Commit and merge ─────────────────────────────────
 echo "▸ [4/6] Committing and merging develop -> main..."
 
-git add pubspec.yaml installers/installer.iss
+git add pubspec.yaml installers/installer.iss RELEASE_NOTES.md
 git commit -m "release: v$VERSION"
 
 git checkout main
