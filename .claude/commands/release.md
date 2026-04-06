@@ -1,35 +1,36 @@
-Release a new version of the TBS Invoice Generator.
+Release a new version of the application.
 
 ## Input
 
-The user provides a version number (e.g. `1.4.0`). If not provided, determine the next minor version by reading the current version from `lib/core/constants/app_version.dart`.
+The user may provide a version number (e.g. `1.5.0`). If not provided, auto-determine using semver based on commits since the last release:
+- **New feature** (`feat:`) → bump minor (e.g. 1.4.0 → 1.5.0)
+- **Bug fix / small change** (`fix:`, `chore:`, `docs:`) → bump patch (e.g. 1.5.0 → 1.5.1)
+- **Breaking change** → bump major (e.g. 1.5.1 → 2.0.0)
+
+Read the current version from the code-level version constant.
 
 ## Steps
 
-1. **Check preconditions**: Must be on `develop` branch with no uncommitted changes. If there are uncommitted changes, commit them first (ask for confirmation).
+1. **Find the version constant**: Search the codebase for a version constant file (e.g. `app_version.dart`, `version.dart`, `constants.dart`). This is the **source of truth**. If none exists, check `pubspec.yaml` or `package.json`.
 
-2. **Update version — code level first**: The code-level version in `lib/core/constants/app_version.dart` is the **source of truth**. Update it first, then update `pubspec.yaml` to match. Both files MUST always have the same version.
-   - `lib/core/constants/app_version.dart`: `const String appVersion = '<version>';`
-   - `pubspec.yaml`: `version: <version>+<build_number>` (keep existing build number, the release script auto-increments it)
+2. **Check preconditions**: Must be on the development branch with no uncommitted changes. If there are uncommitted changes, commit them first (ask for confirmation).
 
-3. **Generate RELEASE_NOTES.md**: Run `git log --oneline` from the last `release: vX.Y.Z` commit to HEAD. Summarize the changes into user-friendly bullet points (not raw commit messages) under a `## What's New in vX.Y.Z` heading. Write this to `RELEASE_NOTES.md`.
+3. **Update version — code level first**: Update the code-level version constant first, then update the project manifest (`pubspec.yaml`, `package.json`, etc.) to match. Both MUST always have the same version.
 
-4. **Commit all changes**: Commit the version bump + release notes so the working tree is clean before the release script runs.
+4. **Generate release notes**: Run `git log --oneline` from the last release commit to HEAD. Write **only user-facing software changes** as bullet points. Include: new features, UI changes, bug fixes, performance improvements. Exclude: CI/CD changes, GitHub Actions, build scripts, documentation updates, code refactoring, dependency bumps, skill/command additions. Write to the release notes file (e.g. `RELEASE_NOTES.md`, `CHANGELOG.md`).
 
-5. **Run the release script**: Execute `echo y | ./tools/release.sh <version>`. This script:
-   - Bumps version in `pubspec.yaml` and `installers/installer.iss`
-   - Builds Flutter Windows app
-   - Compiles Inno Setup installer
-   - Commits, merges develop → main, pushes
-   - Creates GitHub Release with `.exe` attached
-   - GitHub Actions auto-updates Firestore `app_config/version`
+5. **Commit all changes**: Commit the version bump + release notes so the working tree is clean before any release script runs.
 
-6. **Verify**: After the script completes, check that the GitHub Release was created and the Actions workflow was triggered.
+6. **Run the release script**: Look for a release script in `tools/`, `scripts/`, or project root. If found, execute it with the version number. If not found, manually:
+   - Build the project
+   - Create a git tag `v<version>`
+   - Push to remote
+   - Create a GitHub Release via `gh release create`
+
+7. **Verify**: Check that the GitHub Release was created and any CI/CD workflows were triggered.
 
 ## Important Notes
 
-- **Version sync**: `lib/core/constants/app_version.dart` and `pubspec.yaml` must always match. Update code level first, then pubspec.
-- The release script requires interactive confirmation — use `echo y |` to auto-confirm.
-- The script has a hardcoded Inno Setup path: `D:/Software/Inno Setup 6/ISCC.exe`.
-- Installer output: `build/installer/TBS_Invoice_Generator_Setup_{VERSION}.exe`.
-- The script will fail if `flutter build windows` fails — resolve build errors first.
+- **Version sync**: Code-level version and project manifest must always match. Update code level first.
+- Check `CLAUDE.md` for project-specific release instructions.
+- If a release script exists, check if it needs interactive confirmation and handle accordingly.
