@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:invoice_billing_app/core/domain/services/app_update_service.dart';
 import 'package:invoice_billing_app/core/entities/app_version_info.dart';
+import 'package:invoice_billing_app/core/constants/app_version.dart';
 import 'package:invoice_billing_app/core/models/app_version_info_model.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 
 class AppUpdateServiceImpl implements AppUpdateService {
   final FirebaseFirestore _firestore;
@@ -19,8 +19,7 @@ class AppUpdateServiceImpl implements AppUpdateService {
       if (!doc.exists || doc.data() == null) return null;
 
       final versionInfo = AppVersionInfoModel.fromMap(doc.data()!);
-      final packageInfo = await PackageInfo.fromPlatform();
-      final currentVersion = packageInfo.version;
+      final currentVersion = appVersion;
 
       if (_isNewer(versionInfo.latestVersion, currentVersion)) {
         return versionInfo;
