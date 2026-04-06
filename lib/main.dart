@@ -146,7 +146,7 @@ class _StartingPageState extends State<StartingPage> {
         }
       },
       builder: (context, state) {
-        if (state is AppUserLoading) {
+        if (state is AppUserInitial || state is AppUserLoading) {
           return Scaffold(
             body: Loader(),
           );
@@ -157,7 +157,7 @@ class _StartingPageState extends State<StartingPage> {
         if (state is AppUserLoggedIn) {
           return MainNavigationPage();
         }
-        if (state is AppUserInitial || state is AppUserFailure) {
+        if (state is AppUserNotLoggedIn || state is AppUserFailure) {
           return AuthPage();
         }
         return Scaffold(

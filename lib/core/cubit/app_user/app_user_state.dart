@@ -5,6 +5,8 @@ sealed class AppUserState {}
 
 final class AppUserInitial extends AppUserState {}
 
+final class AppUserNotLoggedIn extends AppUserState {}
+
 final class AppUserLoading extends AppUserState {}
 
 final class AppUserFailure extends AppUserState {
