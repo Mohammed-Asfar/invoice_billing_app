@@ -24,6 +24,7 @@ class QuotationModel extends Quotation {
     required super.grandTotal,
     required super.grandTotalInWords,
     required super.termsAndConditions,
+    super.isIgst = false,
   });
 
   QuotationModel copyWith({
@@ -49,6 +50,7 @@ class QuotationModel extends Quotation {
     double? grandTotal,
     String? grandTotalInWords,
     String? termsAndConditions,
+    bool? isIgst,
   }) {
     return QuotationModel(
       quotationNumber: quotationNumber ?? this.quotationNumber,
@@ -73,6 +75,7 @@ class QuotationModel extends Quotation {
       grandTotal: grandTotal ?? this.grandTotal,
       grandTotalInWords: grandTotalInWords ?? this.grandTotalInWords,
       termsAndConditions: termsAndConditions ?? this.termsAndConditions,
+      isIgst: isIgst ?? this.isIgst,
     );
   }
 
@@ -100,6 +103,7 @@ class QuotationModel extends Quotation {
       'shippingAddress': shippingAddress,
       'shippingState': shippingState,
       'shippingCode': shippingCode,
+      'isIgst': isIgst,
     };
   }
 
@@ -127,6 +131,7 @@ class QuotationModel extends Quotation {
       grandTotal: quotation.grandTotal,
       grandTotalInWords: quotation.grandTotalInWords,
       termsAndConditions: quotation.termsAndConditions,
+      isIgst: quotation.isIgst,
     );
   }
 
@@ -160,6 +165,7 @@ class QuotationModel extends Quotation {
       grandTotal: (map['grandTotal'] as num).toDouble(),
       grandTotalInWords: map['grandTotalInWords'] as String,
       termsAndConditions: map['termsAndConditions'] ?? "",
+      isIgst: map['isIgst'] as bool? ?? false,
     );
   }
 }

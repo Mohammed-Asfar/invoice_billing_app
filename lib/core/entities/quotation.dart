@@ -23,6 +23,7 @@ class Quotation {
   final double grandTotal;
   final String grandTotalInWords;
   final String termsAndConditions;
+  final bool isIgst;
 
   Quotation({
     required this.quotationNumber,
@@ -47,6 +48,7 @@ class Quotation {
     required this.grandTotal,
     required this.grandTotalInWords,
     required this.termsAndConditions,
+    this.isIgst = false,
   });
 }
 

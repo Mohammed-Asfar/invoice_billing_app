@@ -301,14 +301,21 @@ class _EditInvoicePreviewPageState extends State<EditInvoicePreviewPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             title: "Sub total",
             value: "₹ ${invoiceController.subTotalController.text}"),
-        InvoiceDetailTile(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            title: "SGST (${invoiceController.sgsttaxController.text}%)",
-            value: "₹ ${invoiceController.sgstController.text}"),
-        InvoiceDetailTile(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            title: "CGST (${invoiceController.cgsttaxController.text}%)",
-            value: "₹ ${invoiceController.cgstController.text}"),
+        if (invoiceController.isIgst)
+          InvoiceDetailTile(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title: "IGST (${invoiceController.igstTaxController.text}%)",
+              value: "₹ ${invoiceController.igstAmountController.text}"),
+        if (!invoiceController.isIgst)
+          InvoiceDetailTile(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title: "SGST (${invoiceController.sgsttaxController.text}%)",
+              value: "₹ ${invoiceController.sgstController.text}"),
+        if (!invoiceController.isIgst)
+          InvoiceDetailTile(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title: "CGST (${invoiceController.cgsttaxController.text}%)",
+              value: "₹ ${invoiceController.cgstController.text}"),
         InvoiceDetailTile(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             title: "Round Off",

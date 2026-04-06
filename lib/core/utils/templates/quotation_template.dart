@@ -97,8 +97,8 @@ Future<Uint8List> generateQuotationPDF(
               children: [
                 pw.Image(
                   logo,
-                  width: 100,
-                  height: 80,
+                  width: 140,
+                  height: 110,
                 ),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -243,19 +243,19 @@ Future<Uint8List> generateQuotationPDF(
 
             // Quotation Totals
             _totalRow("Sub-Total:", quotation.subTotal),
-            quotation.customerCode == "33"
-                ? pw.Container()
-                : _totalRow(
+            quotation.isIgst
+                ? _totalRow(
                     "OUTPUT IGST @ ${quotation.cgstPercent + quotation.sgstPercent}%:",
-                    quotation.cgstAmount + quotation.sgstAmount),
-            quotation.customerCode != "33"
-                ? pw.Container()
-                : _totalRow("OUTPUT CGST @ ${quotation.cgstPercent}%:",
-                    quotation.cgstAmount),
-            quotation.customerCode != "33"
-                ? pw.Container()
-                : _totalRow("OUTPUT SGST @ ${quotation.sgstPercent}%:",
-                    quotation.sgstAmount),
+                    quotation.cgstAmount + quotation.sgstAmount)
+                : pw.Container(),
+            !quotation.isIgst
+                ? _totalRow("OUTPUT CGST @ ${quotation.cgstPercent}%:",
+                    quotation.cgstAmount)
+                : pw.Container(),
+            !quotation.isIgst
+                ? _totalRow("OUTPUT SGST @ ${quotation.sgstPercent}%:",
+                    quotation.sgstAmount)
+                : pw.Container(),
 
             _totalRow("Round Off: ", quotation.roundOff, isNegative: true),
             pw.Text(

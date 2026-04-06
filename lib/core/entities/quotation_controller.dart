@@ -38,6 +38,9 @@ class QuotationController {
   TextEditingController grandTotalController = TextEditingController();
   TextEditingController grandTotalInWordsController = TextEditingController();
   TextEditingController termsAndConditionsController = TextEditingController();
+  TextEditingController igstTaxController = TextEditingController(text: "18");
+  TextEditingController igstAmountController = TextEditingController();
+  bool isIgst = false;
 
   DateTime issuedDateController = DateTime.now();
   DateTime validUntilDateController = DateTime.now().add(Duration(days: 30));
@@ -69,6 +72,13 @@ class QuotationController {
         quotation.grandTotal.toStringAsFixed(2);
     controller.grandTotalInWordsController.text = quotation.grandTotalInWords;
     controller.termsAndConditionsController.text = quotation.termsAndConditions;
+    controller.isIgst = quotation.isIgst;
+    if (quotation.isIgst) {
+      controller.igstTaxController.text =
+          (quotation.sgstPercent + quotation.cgstPercent).toStringAsFixed(0);
+      controller.igstAmountController.text =
+          (quotation.sgstAmount + quotation.cgstAmount).toStringAsFixed(2);
+    }
 
     // Populate product controllers
     controller.productControllers.clear();
@@ -136,6 +146,12 @@ class QuotationController {
     }
   }
 
+  void syncIgstToSgstCgst() {
+    double igstPercent = double.tryParse(igstTaxController.text) ?? 0.0;
+    sgsttaxController.text = (igstPercent / 2).toString();
+    cgsttaxController.text = (igstPercent / 2).toString();
+  }
+
   void calculateTotals() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       double subTotal = 0.0;
@@ -169,6 +185,7 @@ class QuotationController {
       subTotalController.text = subTotal.toStringAsFixed(2);
       sgstController.text = sgst.toStringAsFixed(2);
       cgstController.text = cgst.toStringAsFixed(2);
+      igstAmountController.text = (sgst + cgst).toStringAsFixed(2);
       roundOffController.text = roundOff.toStringAsFixed(2);
       grandTotalController.text = grandTotal.toStringAsFixed(2);
       grandTotalInWordsController.text = numberToWords(grandTotal.toInt());
@@ -209,6 +226,7 @@ class QuotationController {
       grandTotal: double.tryParse(grandTotalController.text) ?? 0.0,
       grandTotalInWords: grandTotalInWordsController.text.trim(),
       termsAndConditions: termsAndConditionsController.text.trim(),
+      isIgst: isIgst,
     );
   }
 }

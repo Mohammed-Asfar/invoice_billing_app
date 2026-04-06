@@ -22,6 +22,7 @@ class Invoice {
   final double roundOff;
   final double grandTotal;
   final String grandTotalInWords;
+  final bool isIgst;
 
   Invoice({
     required this.invoiceNumber,
@@ -45,6 +46,7 @@ class Invoice {
     required this.roundOff,
     required this.grandTotal,
     required this.grandTotalInWords,
+    this.isIgst = false,
   });
 }
 

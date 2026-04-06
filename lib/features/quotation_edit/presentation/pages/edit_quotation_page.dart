@@ -416,52 +416,120 @@ class _EditQuotationPageState extends State<EditQuotationPage> {
         Row(
           children: [
             const Spacer(flex: 4),
-            const Text("Output SGST"),
-            Expanded(
-              flex: 1,
-              child: ProductField(
-                icon: Icons.percent_rounded,
-                controller: _quotationController!.sgsttaxController
-                  ..addListener(() => _quotationController!.calculateTotals()),
-                hintText: "SGST Tax",
-              ),
-            ),
-            Expanded(
-              flex: 2,
-              child: ProductField(
-                readOnly: true,
-                icon: Icons.currency_rupee_rounded,
-                controller: _quotationController!.sgstController,
-                hintText: "Output SGST",
+            const Text("IGST"),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _quotationController!.isIgst =
+                      !_quotationController!.isIgst;
+                  if (_quotationController!.isIgst) {
+                    double sgst = double.tryParse(
+                            _quotationController!.sgsttaxController.text) ??
+                        0;
+                    double cgst = double.tryParse(
+                            _quotationController!.cgsttaxController.text) ??
+                        0;
+                    _quotationController!.igstTaxController.text =
+                        (sgst + cgst).toString();
+                  }
+                  _quotationController!.calculateTotals();
+                });
+              },
+              child: Icon(
+                _quotationController!.isIgst
+                    ? Icons.toggle_on_rounded
+                    : Icons.toggle_off_rounded,
+                color: _quotationController!.isIgst
+                    ? AppColors.primaryColor
+                    : null,
+                size: 50,
               ),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        Row(
-          children: [
-            const Spacer(flex: 4),
-            const Text("Output CGST"),
-            Expanded(
-              flex: 1,
-              child: ProductField(
-                icon: Icons.percent_rounded,
-                controller: _quotationController!.cgsttaxController
-                  ..addListener(() => _quotationController!.calculateTotals()),
-                hintText: "CGST Tax",
+        if (_quotationController!.isIgst)
+          Row(
+            children: [
+              const Spacer(flex: 4),
+              const Text("Output IGST"),
+              Expanded(
+                flex: 1,
+                child: ProductField(
+                  icon: Icons.percent_rounded,
+                  controller: _quotationController!.igstTaxController
+                    ..addListener(() {
+                      _quotationController!.syncIgstToSgstCgst();
+                      _quotationController!.calculateTotals();
+                    }),
+                  hintText: "IGST Tax",
+                ),
               ),
-            ),
-            Expanded(
-              flex: 2,
-              child: ProductField(
-                readOnly: true,
-                icon: Icons.currency_rupee_rounded,
-                controller: _quotationController!.cgstController,
-                hintText: "Output CGST",
+              Expanded(
+                flex: 2,
+                child: ProductField(
+                  readOnly: true,
+                  icon: Icons.currency_rupee_rounded,
+                  controller: _quotationController!.igstAmountController,
+                  hintText: "Output IGST",
+                ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
+        if (!_quotationController!.isIgst)
+          Row(
+            children: [
+              const Spacer(flex: 4),
+              const Text("Output SGST"),
+              Expanded(
+                flex: 1,
+                child: ProductField(
+                  icon: Icons.percent_rounded,
+                  controller: _quotationController!.sgsttaxController
+                    ..addListener(
+                        () => _quotationController!.calculateTotals()),
+                  hintText: "SGST Tax",
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: ProductField(
+                  readOnly: true,
+                  icon: Icons.currency_rupee_rounded,
+                  controller: _quotationController!.sgstController,
+                  hintText: "Output SGST",
+                ),
+              ),
+            ],
+          ),
+        if (!_quotationController!.isIgst) const SizedBox(height: 10),
+        if (!_quotationController!.isIgst)
+          Row(
+            children: [
+              const Spacer(flex: 4),
+              const Text("Output CGST"),
+              Expanded(
+                flex: 1,
+                child: ProductField(
+                  icon: Icons.percent_rounded,
+                  controller: _quotationController!.cgsttaxController
+                    ..addListener(
+                        () => _quotationController!.calculateTotals()),
+                  hintText: "CGST Tax",
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: ProductField(
+                  readOnly: true,
+                  icon: Icons.currency_rupee_rounded,
+                  controller: _quotationController!.cgstController,
+                  hintText: "Output CGST",
+                ),
+              ),
+            ],
+          ),
         const SizedBox(height: 10),
         Row(
           children: [
