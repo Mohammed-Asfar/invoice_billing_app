@@ -37,6 +37,9 @@ class InvoiceController {
   TextEditingController roundoffController = TextEditingController();
   TextEditingController grandTotalController = TextEditingController();
   TextEditingController grandTotalInWordsController = TextEditingController();
+  TextEditingController igstTaxController = TextEditingController(text: "18");
+  TextEditingController igstAmountController = TextEditingController();
+  bool isIgst = false;
 
   DateTime issuedDateController = DateTime.now();
 
@@ -87,6 +90,12 @@ class InvoiceController {
     }
   }
 
+  void syncIgstToSgstCgst() {
+    double igstPercent = double.tryParse(igstTaxController.text) ?? 0.0;
+    sgsttaxController.text = (igstPercent / 2).toString();
+    cgsttaxController.text = (igstPercent / 2).toString();
+  }
+
   void calculateTotals() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       double subTotal = 0.0;
@@ -120,6 +129,7 @@ class InvoiceController {
       subTotalController.text = subTotal.toStringAsFixed(2);
       sgstController.text = sgst.toStringAsFixed(2);
       cgstController.text = cgst.toStringAsFixed(2);
+      igstAmountController.text = (sgst + cgst).toStringAsFixed(2);
       roundOffController.text = roundOff.toStringAsFixed(2);
       grandTotalController.text = grandTotal.toStringAsFixed(2);
       grandTotalInWordsController.text = numberToWords(grandTotal.toInt());
@@ -160,6 +170,7 @@ class InvoiceController {
       shippingAddress: shippingAddressController.text.trim(),
       shippingState: shippingStateController.text.trim(),
       shippingCode: shippingCodeController.text.trim(),
+      isIgst: isIgst,
     );
   }
 }

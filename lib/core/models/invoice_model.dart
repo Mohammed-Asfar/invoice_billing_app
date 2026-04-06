@@ -28,6 +28,7 @@ class InvoiceModel extends Invoice {
     required super.shippingAddress,
     required super.shippingState,
     required super.shippingCode,
+    super.isIgst = false,
   });
 
   InvoiceModel copyWith({
@@ -52,6 +53,7 @@ class InvoiceModel extends Invoice {
     String? shippingAddress,
     String? shippingState,
     String? shippingCode,
+    bool? isIgst,
   }) {
     return InvoiceModel(
       invoiceNumber: invoiceNumber ?? this.invoiceNumber,
@@ -75,6 +77,7 @@ class InvoiceModel extends Invoice {
       shippingAddress: shippingAddress ?? this.shippingAddress,
       shippingState: shippingState ?? this.shippingState,
       shippingCode: shippingCode ?? this.shippingCode,
+      isIgst: isIgst ?? this.isIgst,
     );
   }
 
@@ -102,6 +105,7 @@ class InvoiceModel extends Invoice {
       'shippingAddress': shippingAddress,
       'shippingState': shippingState,
       'shippingCode': shippingCode,
+      'isIgst': isIgst,
     };
   }
 
@@ -130,6 +134,7 @@ class InvoiceModel extends Invoice {
       shippingAddress: invoice.shippingAddress,
       shippingState: invoice.shippingState,
       shippingCode: invoice.shippingCode,
+      isIgst: invoice.isIgst,
     );
   }
 
@@ -161,6 +166,7 @@ class InvoiceModel extends Invoice {
       shippingAddress: map['shippingAddress'] as String,
       shippingState: map['shippingState'] as String,
       shippingCode: map['shippingCode'] as String,
+      isIgst: map['isIgst'] as bool? ?? false,
     );
   }
 
@@ -198,7 +204,8 @@ class InvoiceModel extends Invoice {
         other.shippingName == shippingName &&
         other.shippingAddress == shippingAddress &&
         other.shippingState == shippingState &&
-        other.shippingCode == shippingCode;
+        other.shippingCode == shippingCode &&
+        other.isIgst == isIgst;
   }
 
   @override
@@ -223,6 +230,7 @@ class InvoiceModel extends Invoice {
         shippingName.hashCode ^
         shippingAddress.hashCode ^
         shippingState.hashCode ^
-        shippingCode.hashCode;
+        shippingCode.hashCode ^
+        isIgst.hashCode;
   }
 }

@@ -303,30 +303,35 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
             height: 10,
           ),
           Row(
-            spacing: 20,
             children: [
-              Spacer(
-                flex: 4,
-              ),
-              Text("Output SGST"),
-              Expanded(
-                flex: 1,
-                child: ProductField(
-                  icon: Icons.percent_rounded,
-                  controller: _invoiceController!.sgsttaxController
-                    ..addListener(() {
-                      _invoiceController!.calculateTotals();
-                    }),
-                  hintText: "SGST Tax",
-                ),
-              ),
-              Expanded(
-                flex: 2,
-                child: ProductField(
-                  readOnly: true,
-                  icon: Icons.currency_rupee_rounded,
-                  controller: _invoiceController!.sgstController,
-                  hintText: "Output SGST",
+              Spacer(flex: 4),
+              Text("IGST"),
+              SizedBox(width: 10),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _invoiceController!.isIgst = !_invoiceController!.isIgst;
+                    if (_invoiceController!.isIgst) {
+                      double sgst = double.tryParse(
+                              _invoiceController!.sgsttaxController.text) ??
+                          0;
+                      double cgst = double.tryParse(
+                              _invoiceController!.cgsttaxController.text) ??
+                          0;
+                      _invoiceController!.igstTaxController.text =
+                          (sgst + cgst).toString();
+                    }
+                    _invoiceController!.calculateTotals();
+                  });
+                },
+                child: Icon(
+                  _invoiceController!.isIgst
+                      ? Icons.toggle_on_rounded
+                      : Icons.toggle_off_rounded,
+                  color: _invoiceController!.isIgst
+                      ? AppColors.primaryColor
+                      : null,
+                  size: 50,
                 ),
               ),
             ],
@@ -334,35 +339,101 @@ class _CreateInvoicePageState extends State<CreateInvoicePage> {
           SizedBox(
             height: 10,
           ),
-          Row(
-            spacing: 20,
-            children: [
-              Spacer(
-                flex: 4,
-              ),
-              Text("Output CGST"),
-              Expanded(
-                flex: 1,
-                child: ProductField(
-                  icon: Icons.percent_rounded,
-                  controller: _invoiceController!.cgsttaxController
-                    ..addListener(() {
-                      _invoiceController!.calculateTotals();
-                    }),
-                  hintText: "CGST Tax",
+          if (_invoiceController!.isIgst)
+            Row(
+              spacing: 20,
+              children: [
+                Spacer(
+                  flex: 4,
                 ),
-              ),
-              Expanded(
-                flex: 2,
-                child: ProductField(
-                  readOnly: true,
-                  icon: Icons.currency_rupee_rounded,
-                  controller: _invoiceController!.cgstController,
-                  hintText: "Output CGST",
+                Text("Output IGST"),
+                Expanded(
+                  flex: 1,
+                  child: ProductField(
+                    icon: Icons.percent_rounded,
+                    controller: _invoiceController!.igstTaxController
+                      ..addListener(() {
+                        _invoiceController!.syncIgstToSgstCgst();
+                        _invoiceController!.calculateTotals();
+                      }),
+                    hintText: "IGST Tax",
+                  ),
                 ),
-              ),
-            ],
-          ),
+                Expanded(
+                  flex: 2,
+                  child: ProductField(
+                    readOnly: true,
+                    icon: Icons.currency_rupee_rounded,
+                    controller: _invoiceController!.igstAmountController,
+                    hintText: "Output IGST",
+                  ),
+                ),
+              ],
+            ),
+          if (!_invoiceController!.isIgst)
+            Row(
+              spacing: 20,
+              children: [
+                Spacer(
+                  flex: 4,
+                ),
+                Text("Output SGST"),
+                Expanded(
+                  flex: 1,
+                  child: ProductField(
+                    icon: Icons.percent_rounded,
+                    controller: _invoiceController!.sgsttaxController
+                      ..addListener(() {
+                        _invoiceController!.calculateTotals();
+                      }),
+                    hintText: "SGST Tax",
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: ProductField(
+                    readOnly: true,
+                    icon: Icons.currency_rupee_rounded,
+                    controller: _invoiceController!.sgstController,
+                    hintText: "Output SGST",
+                  ),
+                ),
+              ],
+            ),
+          if (!_invoiceController!.isIgst)
+            SizedBox(
+              height: 10,
+            ),
+          if (!_invoiceController!.isIgst)
+            Row(
+              spacing: 20,
+              children: [
+                Spacer(
+                  flex: 4,
+                ),
+                Text("Output CGST"),
+                Expanded(
+                  flex: 1,
+                  child: ProductField(
+                    icon: Icons.percent_rounded,
+                    controller: _invoiceController!.cgsttaxController
+                      ..addListener(() {
+                        _invoiceController!.calculateTotals();
+                      }),
+                    hintText: "CGST Tax",
+                  ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: ProductField(
+                    readOnly: true,
+                    icon: Icons.currency_rupee_rounded,
+                    controller: _invoiceController!.cgstController,
+                    hintText: "Output CGST",
+                  ),
+                ),
+              ],
+            ),
           SizedBox(
             height: 10,
           ),

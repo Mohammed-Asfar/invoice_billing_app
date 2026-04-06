@@ -1,6 +1,5 @@
-## What's New in v1.3.0
+## What's New in v1.4.0
 
-- Fixed update dialog UI - now shows as a proper floating dialog
-- Window controls (minimize, maximize, close) no longer hidden by update dialog
-- Release notes are scrollable for long content
-- Automated Firestore update on GitHub Release publish
+- Added IGST toggle for invoices and quotations — switch between IGST (combined) and SGST+CGST (split) on the PDF print
+- Increased company logo size in PDF templates
+- Fixed auth screen briefly flashing on app startup

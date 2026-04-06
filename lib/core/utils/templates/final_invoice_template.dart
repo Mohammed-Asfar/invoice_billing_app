@@ -52,8 +52,8 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
               children: [
                 pw.Image(
                   logo,
-                  width: 100,
-                  height: 80,
+                  width: 140,
+                  height: 110,
                 ),
                 pw.Column(
                   crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -202,19 +202,19 @@ Future<Uint8List> generatefinalClassicInvoicePDF(
 
             // Invoice Totals
             _totalRow("Sub-Total:", invoice.subTotal),
-            invoice.customerCode == "33"
-                ? pw.Container()
-                : _totalRow(
+            invoice.isIgst
+                ? _totalRow(
                     "OUTPUT IGST @ ${invoice.cgstPercent + invoice.sgstPercent}%:",
-                    invoice.cgstAmount + invoice.sgstAmount),
-            invoice.customerCode != "33"
-                ? pw.Container()
-                : _totalRow("OUTPUT CGST @ ${invoice.cgstPercent}%:",
-                    invoice.cgstAmount),
-            invoice.customerCode != "33"
-                ? pw.Container()
-                : _totalRow("OUTPUT SGST @ ${invoice.sgstPercent}%:",
-                    invoice.sgstAmount),
+                    invoice.cgstAmount + invoice.sgstAmount)
+                : pw.Container(),
+            !invoice.isIgst
+                ? _totalRow("OUTPUT CGST @ ${invoice.cgstPercent}%:",
+                    invoice.cgstAmount)
+                : pw.Container(),
+            !invoice.isIgst
+                ? _totalRow("OUTPUT SGST @ ${invoice.sgstPercent}%:",
+                    invoice.sgstAmount)
+                : pw.Container(),
 
             _totalRow("Round Off: ", invoice.roundOff, isNegative: true),
             pw.Text(

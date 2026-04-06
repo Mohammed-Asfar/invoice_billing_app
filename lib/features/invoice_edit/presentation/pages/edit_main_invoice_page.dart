@@ -98,6 +98,13 @@ class _EditMainInvoicePageState extends State<EditMainInvoicePage> {
     invoiceController.customerCodeController.text = widget.invoice.customerCode;
     invoiceController.customerStateNameController.text =
         widget.invoice.customerStateName;
+    invoiceController.isIgst = widget.invoice.isIgst;
+    if (widget.invoice.isIgst) {
+      invoiceController.igstTaxController.text =
+          (widget.invoice.sgstPercent + widget.invoice.cgstPercent).toString();
+      invoiceController.igstAmountController.text =
+          (widget.invoice.sgstAmount + widget.invoice.cgstAmount).toString();
+    }
 
     context.read<EditInvoiceBloc>().invoiceController = invoiceController;
   }

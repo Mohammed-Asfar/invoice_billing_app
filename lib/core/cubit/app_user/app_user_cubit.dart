@@ -46,7 +46,7 @@ class AppUserCubit extends Cubit<AppUserState> {
                 AppUserDetailsUpdate(uid: user_.uid, email: user_.email ?? ''));
           }
         } else {
-          emit(AppUserInitial());
+          emit(AppUserNotLoggedIn());
         }
       });
     } catch (e) {

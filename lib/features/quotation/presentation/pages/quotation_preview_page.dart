@@ -291,14 +291,25 @@ class _QuotationPreviewPageState extends State<QuotationPreviewPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             title: "Sub total",
             value: "₹ ${quotationController.subTotalController.text}"),
-        InvoiceDetailTile(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            title: "SGST (${quotationController.sgsttaxController.text}%)",
-            value: "₹ ${quotationController.sgstController.text}"),
-        InvoiceDetailTile(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            title: "CGST (${quotationController.cgsttaxController.text}%)",
-            value: "₹ ${quotationController.cgstController.text}"),
+        if (quotationController.isIgst)
+          InvoiceDetailTile(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title:
+                  "IGST (${quotationController.igstTaxController.text}%)",
+              value:
+                  "₹ ${quotationController.igstAmountController.text}"),
+        if (!quotationController.isIgst)
+          InvoiceDetailTile(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title:
+                  "SGST (${quotationController.sgsttaxController.text}%)",
+              value: "₹ ${quotationController.sgstController.text}"),
+        if (!quotationController.isIgst)
+          InvoiceDetailTile(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              title:
+                  "CGST (${quotationController.cgsttaxController.text}%)",
+              value: "₹ ${quotationController.cgstController.text}"),
         InvoiceDetailTile(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             title: "Round Off",
